@@ -204,6 +204,18 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .qb:active{transform:scale(.94)}
 #qval{min-width:72px;font:800 48px/1 var(--f-display);font-variant-numeric:tabular-nums}
 .qacts{display:grid;grid-template-columns:1fr 1fr;gap:10px}.qacts .btn{justify-content:center;padding:12px}
+.hometools{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hometools .seg{margin:0}
+.colcard .mv{display:flex;flex-direction:column;gap:2px;align-self:center}
+.ib.sm{width:34px;height:34px;border:1px solid var(--line);font-size:16px}
+.ib:disabled{opacity:.3;cursor:default}
+.grp-blk{margin-bottom:14px}
+.ghead{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:8px 2px;text-align:left}
+.ghead b{flex:1;min-width:0;font:700 16px var(--f-display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grow{display:flex;gap:8px;align-items:center;padding:6px 0}
+.grow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:9px 11px}
+.grow .gcount{font:600 13px var(--f-mono);min-width:18px;text-align:right}
+.dngi{color:var(--danger)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -337,12 +349,39 @@ function bar(){const b=document.getElementById('bar');const c=col();
 function render(){bar();setTimeout(updSaveBar);const m=document.getElementById('main');m.classList.toggle('is-locked',view==='album'&&!!col()?.locked);
   if(view==='home')m.innerHTML=homeHTML();else if(view==='album')m.innerHTML=albumHTML();else m.innerHTML=editHTML();}
 
-function homeHTML(){S.cols.forEach(ensure);
-  return `<div class="cols">${S.cols.map(c=>{const s=stats(c);const p=s.t?Math.round(s.h/s.t*100):0;
-    return `<div class="colcard" data-a="open" data-id="${c.id}" role="button" tabindex="0">${ring(p)}<span class="t"><b>${esc(c.name)}${c.copy?'<span class="badge">Copia</span>':''}</b><span class="muted">${esc(c.editorial||'Sin editorial')} · ${s.h} de ${s.t} · ${s.rep} repetidas</span><span class="strip">${c.variants.slice(0,8).map(v=>`<i style="background:${esc(v.color)}"></i>`).join('')}</span></span><button class="ib" data-a="colmenu" data-id="${c.id}" aria-label="Opciones de ${esc(c.name)}">${IC.more}</button></div>`}).join('')}
-  </div><div class="acts" style="margin-top:14px"><button class="btn pri" data-a="newcol">${IC.plus.replace('<svg','<svg width="18" height="18"')} Nueva colección</button><button class="btn" data-a="io-all">Importar JSON</button></div>
+let reorder=false;
+function sortedIn(list){if(S.sort==='manual')return list;const k=S.sort==='za'?-1:1;return [...list].sort((a,b)=>k*a.name.localeCompare(b.name,'es',{numeric:true,sensitivity:'base'}))}
+function cardHTML(c,first,last){const s=stats(c);const p=s.t?Math.round(s.h/s.t*100):0;
+  return `<div class="colcard" data-a="open" data-id="${c.id}" role="button" tabindex="0">${ring(p)}<span class="t"><b>${esc(c.name)}${c.copy?'<span class="badge">Copia</span>':''}</b><span class="muted">${esc(c.editorial||'Sin editorial')} · ${s.h} de ${s.t} · ${s.rep} repetidas</span><span class="strip">${c.variants.slice(0,8).map(v=>`<i style="background:${esc(v.color)}"></i>`).join('')}</span></span>${reorder&&S.sort==='manual'?`<span class="mv"><button class="ib sm" data-a="cup" data-id="${c.id}" aria-label="Subir" ${first?'disabled':''}>↑</button><button class="ib sm" data-a="cdown" data-id="${c.id}" aria-label="Bajar" ${last?'disabled':''}>↓</button></span>`:''}<button class="ib" data-a="colmenu" data-id="${c.id}" aria-label="Opciones de ${esc(c.name)}">${IC.more}</button></div>`}
+function homeHTML(){S.cols.forEach(ensure);S.groups=S.groups||[];S.sort=S.sort||'manual';S.collapsed=S.collapsed||{};
+  const gids=new Set(S.groups.map(g=>g.id));
+  const blocks=S.groups.map(g=>({g,list:S.cols.filter(c=>c.group===g.id)}));
+  const loose=S.cols.filter(c=>!c.group||!gids.has(c.group));
+  const listHTML=list=>{const l=sortedIn(list);return `<div class="cols">${l.map((c,i)=>cardHTML(c,i===0,i===l.length-1)).join('')}</div>`};
+  let h=`<div class="hometools"><div class="seg" role="group" aria-label="Orden">${[['manual','Manual'],['az','Nombre A→Z'],['za','Nombre Z→A']].map(([k,l])=>`<button aria-pressed="${S.sort===k}" data-a="sort" data-k="${k}">${l}</button>`).join('')}</div>
+    <div class="acts">${S.sort==='manual'?`<button class="btn sm ${reorder?'pri':''}" data-a="reorder">${reorder?'Listo':'↑↓ Mover'}</button>`:''}<button class="btn sm" data-a="groups">Grupos${S.groups.length?' ('+S.groups.length+')':''}</button></div></div>`;
+  if(!S.groups.length)h+=listHTML(S.cols);
+  else{for(const {g,list} of blocks){const cl=!!S.collapsed[g.id];
+      h+=`<section class="grp-blk"><button class="ghead" data-a="gtoggle" data-id="${g.id}" aria-expanded="${!cl}"><span class="chev">${cl?'▸':'▾'}</span><b>${esc(g.name)}</b><span class="muted">${list.length}</span></button>${cl?'':list.length?listHTML(list):'<div class="empty">Vacío. Mueve colecciones aquí desde su menú ⋮ → Mover a grupo.</div>'}</section>`}
+    if(loose.length){const cl=!!S.collapsed._none;h+=`<section class="grp-blk"><button class="ghead" data-a="gtoggle" data-id="_none" aria-expanded="${!cl}"><span class="chev">${cl?'▸':'▾'}</span><b>Sin agrupación</b><span class="muted">${loose.length}</span></button>${cl?'':listHTML(loose)}</section>`}}
+  return h+`<div class="acts" style="margin-top:14px"><button class="btn pri" data-a="newcol">${IC.plus.replace('<svg','<svg width="18" height="18"')} Nueva colección</button><button class="btn" data-a="io-all">Importar JSON</button></div>
   <p class="muted" style="font-size:13px;margin-top:18px">Los datos se guardan en este navegador. Exporta el JSON de vez en cuando como respaldo.</p>`;
 }
+let gDel=null;
+function openGroups(){S.groups=S.groups||[];
+  sheet(`<div class="sechd"><h2 style="flex:1">Grupos</h2><button class="btn sm" data-a="close">Listo</button></div>
+  <p class="muted" style="font-size:13px;margin:4px 0 10px">Agrupa tus colecciones (por ejemplo "Mundial 2026" o "Anime"). Si no creas ninguno, se muestran todas juntas.</p>
+  ${S.groups.map((g,i)=>{const n=S.cols.filter(c=>c.group===g.id).length;return `<div class="grow"><input type="text" id="g-${g.id}" data-gname="${g.id}" value="${esc(g.name)}" aria-label="Nombre del grupo"><span class="muted gcount">${n}</span>
+    <button class="ib sm" data-a="gup" data-i="${i}" aria-label="Subir" ${i?'':'disabled'}>↑</button><button class="ib sm" data-a="gdown" data-i="${i}" aria-label="Bajar" ${i<S.groups.length-1?'':'disabled'}>↓</button>
+    ${gDel===g.id?`<button class="btn sm dng" data-a="gdel" data-id="${g.id}" data-ok="1">¿Borrar?</button>`:`<button class="ib sm dngi" data-a="gdel" data-id="${g.id}" aria-label="Borrar grupo">✕</button>`}</div>`}).join('')||'<div class="empty">Todavía no tienes grupos.</div>'}
+  <div class="grow" style="margin-top:12px"><input type="text" id="g-new" placeholder="Nombre del grupo nuevo"><button class="btn sm pri" data-a="gadd">+ Crear</button></div>
+  ${gDel?'<p class="muted" style="font-size:12.5px">Al borrar un grupo, sus colecciones pasan a "Sin agrupación". No se borra ninguna colección.</p>':''}`)}
+function openGroupPick(id){const c=S.cols.find(x=>x.id===id);S.groups=S.groups||[];
+  const opt=(gid,label)=>`<button data-a="gset" data-id="${id}" data-g="${gid}"><span class="mi">${(c.group||'')===gid?'●':'○'}</span><span><b>${esc(label)}</b></span></button>`;
+  sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">Mover a grupo</h2><button class="btn sm" data-a="close">Cerrar</button></div>
+  <p class="muted" style="margin:2px 0 0;font-size:13px">${esc(c.name)}</p>
+  <div class="menu">${opt('','Sin agrupación')}${S.groups.map(g=>opt(g.id,g.name)).join('')}</div>
+  <div class="grow" style="margin-top:12px"><input type="text" id="g-new2" placeholder="O crea un grupo nuevo"><button class="btn sm pri" data-a="gnewset" data-id="${id}">Crear y mover</button></div>`)}
 function ring(p){const r=26,C=2*Math.PI*r;return `<span class="ring"><svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*p/100} ${C}" transform="rotate(-90 32 32)"/></svg><span>${p}%</span></span>`}
 
 function tileHTML(c,sec,it){const n=c.counts[key(sec,it)]||0;const v=varOf(c,it.special?(sec.specialVariant||sec.variant):sec.variant);
@@ -461,7 +500,7 @@ function openShare(){const c=col();const t=shareText(c,shOpt);
   <p class="muted" style="font-size:12.5px;margin-top:10px">Pega el texto en WhatsApp. Qué secciones salen y los saltos de línea se configuran en cada sección.</p>`)}
 
 /* ---------- Importar / exportar ---------- */
-function exportObj(c,withCounts=true){const {id,locked,...rest}=JSON.parse(JSON.stringify(c));if(!withCounts){rest.counts={};delete rest.copy}return {formato:'album-figuritas',version:2,...rest}}
+function exportObj(c,withCounts=true){const {id,locked,group,...rest}=JSON.parse(JSON.stringify(c));if(!withCounts){rest.counts={};delete rest.copy}return {formato:'album-figuritas',version:2,...rest}}
 let menuDel=false;
 function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;const s=stats(c);
   const it=(a,ic,t,d,cls='')=>`<button class="${cls}" data-a="${a}" data-id="${c.id}"><span class="mi">${ic}</span><span><b>${t}</b><small>${d}</small></span></button>`;
@@ -471,6 +510,7 @@ function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;
   ${it('mnew','⧉','Coleccionar copia nueva','Misma configuración, empieza desde 0')}
   ${it('mdup','⎘','Duplicar con lo marcado','Copia exacta, incluye figuritas y repetidas')}
   ${it('medit','✎','Editar álbum','Secciones, variantes, brillos y formato al compartir')}
+  ${it('mgroup','▤','Mover a grupo',(S.groups||[]).find(g=>g.id===c.group)?.name?'Ahora en: '+(S.groups||[]).find(g=>g.id===c.group).name:'Sin agrupación')}
   ${it('medit','◐','Variantes y brillos','Colores, acabados y brillos de esta colección').replace('data-a="medit"','data-a="medit" data-t="vars"')}
   ${it('mexp','⇪','Exportar configuración','JSON para respaldo o para pasárselo a otra persona')}
   ${menuDel?`<button class="dng" data-a="mdel" data-id="${c.id}" data-ok="1"><span class="mi">✕</span><span><b>Toca otra vez para eliminar</b><small>Se borran sus figuritas marcadas. No se puede deshacer.</small></span></button>`
@@ -582,6 +622,18 @@ document.addEventListener('click',e=>{
    case 'disarm':{armed=null;const y=scrollY;render();scrollTo(0,y)}break;
    case 'delsec':if(b.dataset.ok){c.sections.splice(i,1);armed=null;save();render()}break;
    case 'delcol':if(b.dataset.ok){S.cols=S.cols.filter(x=>x.id!==c.id);draft=null;draftNew=false;armed=null;save();view='home';cur=null;render();toast('Colección eliminada')}break;
+   case 'sort':S.sort=b.dataset.k;if(S.sort!=='manual')reorder=false;save();render();break;
+   case 'reorder':reorder=!reorder;render();break;
+   case 'cup':case 'cdown':{const c1=S.cols.find(x=>x.id===b.dataset.id);const gids=new Set((S.groups||[]).map(g=>g.id));const same=x=>(gids.has(x.group)?x.group:'')===(gids.has(c1.group)?c1.group:'');
+     const peers=S.cols.filter(same);const j=peers.indexOf(c1)+(a==='cup'?-1:1);if(j<0||j>=peers.length)break;const o=peers[j];const ia=S.cols.indexOf(c1),ib=S.cols.indexOf(o);[S.cols[ia],S.cols[ib]]=[o,c1];save();const y=scrollY;render();scrollTo(0,y);break}
+   case 'groups':gDel=null;openGroups();break;
+   case 'gtoggle':S.collapsed=S.collapsed||{};S.collapsed[b.dataset.id]=!S.collapsed[b.dataset.id];save();{const y=scrollY;render();scrollTo(0,y)}break;
+   case 'gadd':{const v=clean(document.getElementById('g-new').value);if(!v){toast('Escribe un nombre para el grupo');break}S.groups.push({id:uid(),name:v});save();render();openGroups();break}
+   case 'gup':case 'gdown':{const j=i+(a==='gup'?-1:1);if(j<0||j>=S.groups.length)break;[S.groups[i],S.groups[j]]=[S.groups[j],S.groups[i]];save();render();openGroups();break}
+   case 'gdel':if(b.dataset.ok){S.groups=S.groups.filter(g=>g.id!==b.dataset.id);S.cols.forEach(c=>{if(c.group===b.dataset.id)delete c.group});gDel=null;save();render();openGroups();toast('Grupo borrado')}else{gDel=b.dataset.id;openGroups()}break;
+   case 'mgroup':openGroupPick(b.dataset.id);break;
+   case 'gset':{const c1=S.cols.find(x=>x.id===b.dataset.id);if(b.dataset.g)c1.group=b.dataset.g;else delete c1.group;save();closeSheet();render();toast(b.dataset.g?'Movida a '+S.groups.find(g=>g.id===b.dataset.g).name:'Movida a Sin agrupación');break}
+   case 'gnewset':{const v=clean(document.getElementById('g-new2').value);if(!v){toast('Escribe un nombre para el grupo');break}const g={id:uid(),name:v};S.groups.push(g);S.cols.find(x=>x.id===b.dataset.id).group=g.id;save();closeSheet();render();toast('Movida a '+v);break}
    case 'colmenu':menuDel=false;openColMenu(b.dataset.id);break;
    case 'mnew':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),false);closeSheet();render();toast('Copia nueva lista: '+n.name);break}
    case 'mdup':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),true);closeSheet();render();toast('Duplicada: '+n.name);break}
@@ -593,7 +645,7 @@ document.addEventListener('click',e=>{
    case 'reset0':c.counts={};updSaveBar();toast('Se pondrá todo en 0 al guardar');break;
   }
 });
-document.addEventListener('input',e=>{const el=e.target,c=col();
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.gname){const g=S.groups.find(x=>x.id===e.target.dataset.gname);if(g){g.name=e.target.value;save();if(view==='home')document.getElementById('main').innerHTML=homeHTML()}return}const el=e.target,c=col();
   if(el.id==='q'){q=el.value;const pos=el.selectionStart;document.getElementById('main').innerHTML=albumHTML();const n=document.getElementById('q');n.focus();n.setSelectionRange(pos,pos);return}
   if(!c)return;const val=el.type==='checkbox'?el.checked:el.value;
   if(el.dataset.c){c[el.dataset.c]=val;save();if(el.dataset.c==='name')bar();return}
