@@ -1,2 +1,2 @@
-# collector
-coleccion de cards y sticker
+# album-collection-v1
+album-collection-v1
