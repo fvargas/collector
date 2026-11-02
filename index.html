@@ -259,11 +259,15 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .badge.upd{background:color-mix(in oklab,var(--ok) 25%,var(--surface2))}
 .schips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}.schips .lbl{margin-right:2px}
 .actv .cnt{font:600 11px var(--f-mono);color:var(--muted);margin-left:2px}
-.secnav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 57px);z-index:4;display:flex;gap:6px;align-items:center;background:var(--bg);padding:8px 0;margin:0 0 6px;border-bottom:1px solid var(--line)}
+.stickyhead{position:sticky;top:calc(env(safe-area-inset-top,0px) + 57px);z-index:4;background:var(--bg);padding-top:8px;margin:0 0 8px;border-bottom:1px solid var(--line)}
+.stickyhead .tabs{margin-bottom:8px}.stickyhead .tools{margin-bottom:6px;flex-wrap:nowrap}.stickyhead .tools input[type=search]{min-width:70px;flex:1;width:auto}.stickyhead .mode{flex:none}.stickyhead .mode button{padding:8px 10px}
+.secnav{display:flex;gap:6px;align-items:center;padding:4px 0 8px}
+.ib.sm.info{font-size:17px;color:var(--muted)}
 .secnav-in{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.secnav-in::-webkit-scrollbar{display:none}
 .secnav-in button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap}
 .secnav-in button.f{color:var(--muted)}
-.sec{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 112px)}
+.secnav-in button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.sec{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 230px)}
 .sechead{align-items:flex-start}
 .foldbtn{border:0;background:none;width:28px;height:28px;margin:-2px 0 0 -6px;color:var(--muted);font-size:15px;flex:none}
 .sechead h4{cursor:pointer}
@@ -271,6 +275,13 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .secfoot{display:flex;justify-content:flex-end;margin-top:10px}
 .grid .tile.txa::after,.grid .tile.v-holo{animation:none!important}
 .sec{content-visibility:auto;contain-intrinsic-size:auto 420px}
+.sacts{display:flex;gap:4px;margin:-4px -4px 0 6px}
+.ib.sm.sa{width:32px;height:32px;font-size:15px;color:var(--muted)}
+.ib.sm.sa:hover{color:var(--fg)}
+.confirmbar{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;gap:8px;align-items:center;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -10px 24px -10px rgba(0,0,0,.5);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.confirmbar .cb-txt{flex:1;min-width:0}.confirmbar b{display:block;font-weight:700;line-height:1.25}.confirmbar small{display:block;color:var(--muted);font-size:12.5px}
+.tplq{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px;margin-bottom:8px}
+.tplgrp{margin-bottom:10px}.tplh{display:flex;gap:8px;align-items:baseline;font:700 13px var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:6px 2px 0}.tplh .muted{font:600 12px var(--f-mono)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -278,11 +289,12 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <main class="wrap" id="main"></main>
 <div id="sheet" class="sheet" hidden><div id="sheetBody"></div></div>
 <div id="savebar" class="savebar" hidden><span class="sbst">Sin cambios</span><button class="btn" data-a="ecancel">Cancelar</button><button class="btn pri" data-a="esave" disabled>Guardar</button></div>
+<div id="confirmbar" class="confirmbar" hidden role="alertdialog" aria-live="assertive"><div class="cb-txt"><b class="cb-t"></b><small class="cb-d"></small></div><button class="btn" data-a="pendno">Cancelar</button><button class="btn pri" data-a="pendok">Confirmar</button></div>
 <div id="toast" class="toast" hidden></div>
 <style id="txs"></style>
 
 <script>
-const APP_VER='14';
+const APP_VER='18';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -463,7 +475,7 @@ function bar(){const b=document.getElementById('bar');const c=col();
   else if(view==='trade')b.innerHTML=`<button class="ib" data-a="tback" aria-label="Volver al álbum">${IC.back}</button><h1>Intercambiar</h1>`;
   else b.innerHTML=`<button class="ib" data-a="album" aria-label="Volver al álbum">${IC.back}</button><h1>Configurar álbum</h1><button class="ib" data-a="io" aria-label="JSON">${IC.io}</button>`;
 }
-function render(){bar();setTimeout(updSaveBar);const m=document.getElementById('main');m.classList.toggle('is-locked',view==='album'&&!!col()?.locked);
+function render(){if(typeof hideConfirm==='function'&&pend)hideConfirm();bar();if(typeof spy==='function')requestAnimationFrame(()=>spy());setTimeout(updSaveBar);const m=document.getElementById('main');m.classList.toggle('is-locked',view==='album'&&!!col()?.locked);
   if(view==='home')m.innerHTML=homeHTML();else if(view==='album')m.innerHTML=albumHTML();else if(view==='trade')m.innerHTML=tradeHTML();else m.innerHTML=editHTML();}
 
 let reorder=false;
@@ -540,15 +552,19 @@ function secBlock(c,sec,qq){if(!sec.showApp)return null;const fold=(c.ui&&c.ui.f
         const e=l.reduce((a,[,,e])=>a+e,0);if(!multi)n+=e;shown+=l.length;
         body+=(multi?vsubHTML(c,vid,e)+(inGoalSec(c,sec,vid)?'':'<span class="vchip meta" style="margin:-2px 0 6px;display:inline-flex">Fuera de tu meta</span>'):'')+grid(l.map(([it,z,e,na])=>repTileHTML(c,sec,it,z,e,na)).join(''))});if(!shown&&!(multi&&body))return null;cnt=n+' rep.'}
     const v=varOf(c,multi?secVars(c,sec)[0]:sec.variant);
-    return {sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span></div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body}</section>`}}}
-function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;const g=goalOf(c);const {used,act}=activeVar(c);
-  let h=`${sumHTML(c,s,p,g,used)}
-  <div class="tabs" role="tablist">${[['album','Álbum'],['miss','Faltantes'],['rep','Repetidas']].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div>
-  <div class="tools"><input type="search" id="q" placeholder="Buscar número o nombre" value="${esc(q)}">${tab==='rep'?`<div class="mode"><button aria-pressed="${repView==='all'}" data-a="repview" data-k="all">Agregar</button><button aria-pressed="${repView!=='all'}" data-a="repview" data-k="only">Solo mis repetidas</button></div>`:''}</div>
-  ${c.locked?`<div class="lockbar">${IC.lock.replace('<svg','<svg width="18" height="18"')}<span style="flex:1">Bloqueado: los toques no cambian nada</span><button class="btn sm" data-a="lock">Desbloquear</button></div>`:''}<p class="hint">${tab==='rep'?(repView==='all'?'Toca para sumar una repetida, mantén presionado para quitar una. Aquí puedes cargar repetidas de cualquier sección o variante, aunque no la colecciones. Las tenues son las que te faltan.':'Mantén presionado para quitar una repetida cuando la entregues. Con 4 o más se abre el contador.'):tab==='miss'?'Toca una faltante cuando la consigas.':used.length?'Toca para marcar o desmarcar que la tienes, en la variante elegida en cada sección. Mantén presionado para ver todas sus variantes. Las repetidas se cargan en la pestaña Repetidas.':'Toca para marcar o desmarcar que la tienes. Las repetidas se cargan en la pestaña Repetidas.'}</p>`;
+    return {sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span>${!f&&tab!=='miss'?`<span class="sacts">${tab==='album'?`<button class="ib sm sa" data-a="bulk" data-k="fill" data-s="${sec.id}" aria-label="Completar sección" title="Completar sección">✓</button><button class="ib sm sa" data-a="bulk" data-k="clear" data-s="${sec.id}" aria-label="Limpiar sección" title="Limpiar sección">⌫</button>`:`<button class="ib sm sa" data-a="bulk" data-k="unrep" data-s="${sec.id}" aria-label="Quitar repetidas de la sección" title="Quitar repetidas de la sección">⌫</button>`}</span>`:''}</div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body}</section>`}}}
+function hintText(c){const used=activeVar(c).used;return tab==='rep'?(repView==='all'?'Toca para sumar una repetida y mantén presionado para quitar una. Aquí puedes cargar repetidas de cualquier sección o variante, aunque no la colecciones. Las tenues son las que te faltan. ⌫ quita las repetidas de la sección.':'Mantén presionado para quitar una repetida cuando la entregues. Con 4 o más se abre el contador. ⌫ quita las repetidas de la sección.'):tab==='miss'?'Toca una faltante cuando la consigas y deja de faltar.':(used.length?'Toca para marcar o desmarcar que la tienes, en la variante elegida en cada sección. Mantén presionado para ver todas sus variantes.':'Toca para marcar o desmarcar que la tienes.')+' Las repetidas se cargan en la pestaña Repetidas. ✓ completa la sección y ⌫ la limpia; siempre te pide confirmar.'}
+function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;const g=goalOf(c);const {used}=activeVar(c);
   const qq=q.trim().toUpperCase();let any=false;const out=[];const fold=(c.ui&&c.ui.fold)||{};
   for(const sec of c.sections){const o=secBlock(c,sec,qq);if(o){any=true;out.push(o)}}
-  if(out.length>1)h+=`<nav class="secnav" aria-label="Ir a sección"><div class="secnav-in">${out.map(o=>`<button data-a="goto" data-s="${o.sec.id}" class="${fold[o.sec.id]?'f':''}">${esc(o.sec.name)}</button>`).join('')}</div><button class="ib sm" data-a="foldall" aria-label="Plegar o desplegar todas">${out.every(o=>fold[o.sec.id])?'▾':'▴'}</button></nav>`;
+  const info=`<button class="ib sm info" data-a="hint" aria-label="Cómo se usa esta pestaña">ⓘ</button>`;
+  let h=`${sumHTML(c,s,p,g,used)}
+  <div class="stickyhead">
+  <div class="tabs" role="tablist">${[['album','Álbum'],['miss','Faltantes'],['rep','Repetidas']].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div>
+  <div class="tools"><input type="search" id="q" placeholder="Buscar número o nombre" value="${esc(q)}">${tab==='album'?`<div class="mode"><button data-a="bulk" data-k="fill" aria-label="Completar álbum">✓ Completar</button><button data-a="bulk" data-k="clear" aria-label="Limpiar álbum">⌫ Limpiar</button></div>`:tab==='rep'?`<div class="mode"><button aria-pressed="${repView==='all'}" data-a="repview" data-k="all">Agregar</button><button aria-pressed="${repView!=='all'}" data-a="repview" data-k="only">Solo mías</button></div><button class="ib sm" data-a="bulk" data-k="unrep" aria-label="Quitar todas las repetidas" title="Quitar todas las repetidas">⌫</button>`:''}</div>
+  <nav class="secnav" aria-label="Ir a sección">${info}<div class="secnav-in">${out.length>1?out.map(o=>`<button data-a="goto" data-s="${o.sec.id}" class="${fold[o.sec.id]?'f':''}">${esc(o.sec.name)}</button>`).join(''):''}</div>${out.length>1?`<button class="ib sm" data-a="foldall" aria-label="Plegar o desplegar todas">${out.every(o=>fold[o.sec.id])?'▾':'▴'}</button>`:''}</nav>
+  </div>
+  ${c.locked?`<div class="lockbar">${IC.lock.replace('<svg','<svg width="18" height="18"')}<span style="flex:1">Bloqueado: los toques no cambian nada</span><button class="btn sm" data-a="lock">Desbloquear</button></div>`:''}`;
   out.forEach((o,i)=>{h+=o.html(out[i+1]?out[i+1].sec.id:null)});
   if(!any)h+=`<div class="empty">${tab==='rep'?'Todavía no tienes repetidas.':tab==='miss'?'¡No te falta ninguna!':'No hay figuritas que coincidan.'}</div>`;
   return h;
@@ -764,21 +780,19 @@ const tplOf=c=>c.tpl&&tplCache&&tplCache.list.find(t=>t.id===c.tpl.id);
 const tplNewer=c=>{const t=tplOf(c);return t&&t.version>(c.tpl.version||0)?t:null};
 function colFromTemplate(t){const n=fromJSON(JSON.parse(JSON.stringify(t.data)));delete n.plantilla;n.counts={};n.tpl={id:t.id,file:t.file,version:t.version};return ensure(n)}
 let linkSel=null;
-function openLink(id){const c=S.cols.find(x=>x.id===id);const tl=tplCache;
+function openLink(id){const c=S.cols.find(x=>x.id===id);
+  tplRow=(t,i)=>linkSel===i?`<button data-a="dolink" data-id="${c.id}" data-i="${i}" data-ok="1"><span class="mi">✓</span><span><b>Toca otra vez para usar ${esc(t.name)}</b><small>No se puede deshacer. Si quieres, exporta antes un respaldo.</small></span></button>`:`<button data-a="dolink" data-id="${c.id}" data-i="${i}"><span class="mi">▦</span><span><b>${esc(t.name)}</b><small>${esc('versión '+t.version)}</small></span></button>`;
   sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">Pasar a una plantilla</h2><button class="btn sm" data-a="close">Cerrar</button></div>
   <p class="muted" style="font-size:13px;margin:2px 0 8px">${esc(c.name)} tomará las secciones, variantes y brillos de la plantilla. Tus figuritas marcadas se pasan por nombre de sección y número; si una sección era de una sola variante y ahora tiene varias, van a la primera. Desde ahí recibirás sus actualizaciones.</p>
-  <div class="menu">${!tl?'<div class="empty">Buscando plantillas…</div>':!tl.ok||!tl.list.length?'<div class="empty">No hay plantillas publicadas en esta app.</div>':
-    tl.list.map((t,i)=>linkSel===i?`<button data-a="dolink" data-id="${c.id}" data-i="${i}" data-ok="1"><span class="mi">✓</span><span><b>Toca otra vez para usar ${esc(t.name)}</b><small>No se puede deshacer. Si quieres, exporta antes un respaldo.</small></span></button>`:`<button data-a="dolink" data-id="${c.id}" data-i="${i}"><span class="mi">▦</span><span><b>${esc(t.name)}</b><small>${esc([t.editorial,'versión '+t.version].filter(Boolean).join(' · '))}</small></span></button>`).join('')}</div>`);
-  if(!tl)loadTemplates().then(()=>{if(!document.getElementById('sheet').hidden)openLink(id)})}
-function openNewCol(){const tl=tplCache;
-  const row=(a,ic,t,d,extra='')=>`<button data-a="${a}" ${extra}><span class="mi">${ic}</span><span><b>${t}</b><small>${d}</small></span></button>`;
+  ${tplSearchHTML()}<div id="tpllist">${tplListHTML(tplRow)}</div>`);
+  if(!tplCache)loadTemplates().then(()=>{if(!document.getElementById('sheet').hidden)openLink(id)})}
+function openNewCol(){tplRow=(t,i)=>`<button data-a="newtpl" data-i="${i}"><span class="mi">▦</span><span><b>${esc(t.name)}</b><small>${esc(['versión '+t.version,t.desc].filter(Boolean).join(' · '))}</small></span></button>`;
+  const row=(a,ic,t,d)=>`<button data-a="${a}"><span class="mi">${ic}</span><span><b>${t}</b><small>${d}</small></span></button>`;
   sheet(`<div class="sechd"><h2 style="flex:1">Nueva colección</h2><button class="btn sm" data-a="close">Cerrar</button></div>
-  <h3 style="margin:10px 0 2px">Desde una plantilla</h3>
-  <div class="menu">${!tl?'<div class="empty">Buscando plantillas…</div>':!tl.ok?'<div class="empty">No hay plantillas publicadas en esta app.</div>':!tl.list.length?'<div class="empty">La carpeta de plantillas está vacía.</div>':
-    tl.list.map((t,i)=>row('newtpl','▦',esc(t.name),esc([t.editorial,'versión '+t.version,t.desc].filter(Boolean).join(' · ')),`data-i="${i}"`)).join('')}</div>
+  <h3 style="margin:10px 0 6px">Desde una plantilla</h3>${tplSearchHTML()}<div id="tpllist">${tplListHTML(tplRow)}</div>
   <h3 style="margin:14px 0 2px">Otras formas</h3>
   <div class="menu">${row('newblank','＋','En blanco','Armas las secciones desde cero')}${row('io-all','⇩','Desde un archivo JSON','Pega o elige un JSON que te pasaron')}</div>`);
-  if(!tl)loadTemplates().then(()=>{if(!document.getElementById('sheet').hidden&&document.getElementById('sheetBody').textContent.includes('Buscando plantillas'))openNewCol()})}
+  if(!tplCache)loadTemplates().then(()=>{if(!document.getElementById('sheet').hidden&&document.getElementById('tpllist'))openNewCol()})}
 function updateFromTemplate(c,t){const n=colFromTemplate(t);const oldSecs=c.sections;
   const nameOf=new Map(oldSecs.map(s=>[s.id,normTxt(s.name)]));const newById=new Map(n.sections.map(s=>[s.id,s]));const newByName=new Map(n.sections.map(s=>[normTxt(s.name),s]));
   const vname=new Map(c.variants.map(v=>[v.id,normTxt(v.name)]));const newVarByName=new Map(n.variants.map(v=>[normTxt(v.name),v.id]));const newVarIds=new Set(n.variants.map(v=>v.id));
@@ -791,6 +805,38 @@ function updateFromTemplate(c,t){const n=colFromTemplate(t);const oldSecs=c.sect
     counts[nk]=(counts[nk]||0)+cnt});
   const keep={id:c.id,name:c.name,counts,goal:c.goal,goalPairs:(c.goalPairs||[]).filter(k=>newById.has(k.split('@')[0])),activeVar:c.activeVar,locked:c.locked,group:c.group,copy:c.copy,share:c.share,tpl:{id:t.id,file:t.file,version:t.version}};
   const out=Object.assign(n,keep);const idx=S.cols.indexOf(c);S.cols[idx]=out;save();return lost}
+
+/* ---------- Acciones masivas con confirmación ---------- */
+let pend=null;
+function askConfirm(text,detail,fn){pend=fn;const b=document.getElementById('confirmbar');b.querySelector('.cb-t').textContent=text;b.querySelector('.cb-d').textContent=detail||'';b.hidden=false;b.querySelector('[data-a="pendok"]').focus({preventScroll:true})}
+function hideConfirm(){pend=null;const b=document.getElementById('confirmbar');if(b)b.hidden=true}
+function visSlots(c,sec){// slots visibles en la pestaña actual de esa sección
+  const its=items(sec);const out=[];
+  if(isMulti(sec)){const vid=tab==='rep'?uiSel(c,sec,'rep',secVars(c,sec))[0]:secAct(c,sec);if(!vid)return out;its.forEach(it=>out.push({it,k:key(sec,it)+'@'+vid,vid}))}
+  else its.forEach(it=>out.push({it,k:key(sec,it),vid:legacyVid(sec,it)}));return out}
+function planFill(c,secs){const ks=[];secs.forEach(sec=>{
+    if(isMulti(sec)&&secs.length>1){items(sec).forEach(it=>{const st=itemState(c,sec,it);if(goalOf(c)==='any'){if(st.missItem){const z=st.sl.find(x=>x.vid===secAct(c,sec))||st.sl[0];if(z)ks.push(z.k)}}else st.missSlots.forEach(m=>ks.push(m.k))})}
+    else visSlots(c,sec).forEach(({it,k,vid})=>{if((c.counts[k]||0)>0)return;if(!inGoalSec(c,sec,vid))return;if(goalOf(c)==='any'&&!itemState(c,sec,it).missItem)return;ks.push(k)})});return ks}
+function planClear(c,secs,all){const ks=[];let rep=0;secs.forEach(sec=>{const list=all?items(sec).flatMap(it=>slotsOf(c,sec,it)):visSlots(c,sec);list.forEach(z=>{const n=c.counts[z.k]||0;if(n>0){ks.push(z.k);rep+=Math.max(0,n-1)}})});return {ks,rep}}
+function planUnrep(c,secs,all){const out=[];let tot=0;secs.forEach(sec=>{items(sec).forEach(it=>{const st=itemState(c,sec,it);st.sl.forEach(z=>{if(!all&&isMulti(sec)&&z.vid!==uiSel(c,sec,'rep',secVars(c,sec))[0])return;const b=baseOf(c,st,z);if(b===null)return;const e=z.n-b;if(e>0){out.push([z.k,b]);tot+=e}})})});return {out,tot}}
+function vLabelSec(c,sec){if(!isMulti(sec))return sec.name;const vid=tab==='rep'?uiSel(c,sec,'rep',secVars(c,sec))[0]:secAct(c,sec);return sec.name+' · '+varOf(c,vid).name}
+function doBulk(kind,secId){const c=col();if(c.locked){toast('Álbum bloqueado: toca el candado para cambiarlo');return}
+  const secs=secId?c.sections.filter(s=>s.id===secId):c.sections.filter(s=>s.showApp);const label=secId?vLabelSec(c,secs[0]):c.name;
+  const after=()=>{save();const y=scrollY;render();scrollTo(0,y)};
+  if(kind==='fill'){const ks=planFill(c,secs);if(!ks.length){toast(secId?'Esta sección ya está completa':'Tu álbum ya está completo');return}
+    askConfirm((secId?'Completar ':'Completar álbum ')+label,'Se marcarán '+ks.length+' figuritas como "la tengo".',()=>{ks.forEach(k=>c.counts[k]=1);after();toast(ks.length+' figuritas marcadas')})}
+  else if(kind==='clear'){const {ks,rep}=planClear(c,secs,!secId);if(!ks.length){toast('No hay nada marcado aquí');return}
+    askConfirm((secId?'Limpiar ':'Limpiar álbum ')+label,'Se desmarcarán '+ks.length+' figuritas'+(rep?' y se borrarán '+rep+' repetidas':'')+'.',()=>{ks.forEach(k=>delete c.counts[k]);after();toast('Listo, desmarcadas '+ks.length)})}
+  else if(kind==='unrep'){const {out,tot}=planUnrep(c,secs,!secId);if(!tot){toast('No hay repetidas aquí');return}
+    askConfirm((secId?'Quitar repetidas de ':'Quitar todas las repetidas de ')+label,'Se borrarán '+tot+' repetidas. Tu álbum no cambia.',()=>{out.forEach(([k,b])=>{if(b)c.counts[k]=b;else delete c.counts[k]});after();toast(tot+' repetidas quitadas')})}}
+/* ---------- Lista de plantillas: agrupada y con buscador ---------- */
+let tplQ='';
+function tplListHTML(rowFn){const tl=tplCache;if(!tl)return '<div class="empty">Buscando plantillas…</div>';if(!tl.ok)return '<div class="empty">No hay plantillas publicadas en esta app.</div>';if(!tl.list.length)return '<div class="empty">La carpeta de plantillas está vacía.</div>';
+  const qn=normTxt(tplQ);const groups=new Map();tl.list.forEach((t,i)=>{if(qn&&!normTxt([t.name,t.editorial,t.desc].join(' ')).includes(qn))return;const ed=t.editorial||'Sin editorial';if(!groups.has(ed))groups.set(ed,[]);groups.get(ed).push([t,i])});
+  if(!groups.size)return `<div class="empty">Ninguna plantilla coincide con «${esc(tplQ)}».</div>`;
+  return [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'es')).map(([ed,l])=>`<div class="tplgrp"><div class="tplh">${esc(ed)}<span class="muted">${l.length}</span></div><div class="menu">${l.sort((a,b)=>a[0].name.localeCompare(b[0].name,'es')).map(([t,i])=>rowFn(t,i)).join('')}</div></div>`).join('')}
+function tplSearchHTML(){const tl=tplCache;return tl&&tl.ok&&tl.list.length>3||tplQ?`<input type="search" id="tplq" class="tplq" placeholder="Buscar plantilla o editorial" value="${esc(tplQ)}" autocomplete="off">`:''}
+let tplRow=null;
 
 /* ---------- Compartir ---------- */
 function compress(arr,sec){if(!(sec.kind==='num'||sec.kind==='code'))return arr.map(x=>x.share);const out=[];let i=0;
@@ -914,6 +960,15 @@ function fastTile(k){if(view!=='album'||tab==='miss'||q.trim())return false;cons
     const cEl=secEl.querySelector('.sechead .c');if(cEl)cEl.textContent=((parseInt(cEl.textContent)||0)+dlt)+' rep.';
     if(multi){const ch=secEl.querySelector('.schips [data-id="'+esc2(z.vid)+'"] .cnt');if(ch)ch.textContent=(parseInt(ch.textContent)||0)+dlt;const vs=secEl.querySelector('.vsub .muted');if(vs)vs.textContent=(parseInt(vs.textContent)||0)+dlt}}
   const sm=document.querySelector('#main .sum');if(sm)sm.outerHTML=sumHTML(c);return true}
+let spyRaf=0,spyLock=0;
+function setActiveNav(id){const nav=document.querySelector('.secnav-in');if(!nav)return;let on=null;nav.querySelectorAll('[data-s]').forEach(b=>{const m=b.dataset.s===id;b.classList.toggle('on',m);if(m)on=b});
+  if(on){const l=on.offsetLeft-nav.offsetLeft,w=on.offsetWidth;if(l<nav.scrollLeft+8||l+w>nav.scrollLeft+nav.clientWidth-8)nav.scrollTo({left:Math.max(0,l-24),behavior:'smooth'})}}
+function spy(){spyRaf=0;if(view!=='album'||Date.now()<spyLock)return;const sh=document.querySelector('.stickyhead');const secs=document.querySelectorAll('#main .sec');if(!secs.length)return;
+  const topV=sh?sh.getBoundingClientRect().bottom:0;const mid=topV+(innerHeight-topV)/2;let id=secs[0].id.slice(4),best=1e9;
+  for(const el of secs){const rc=el.getBoundingClientRect();if(rc.top<=mid&&rc.bottom>mid){id=el.id.slice(4);best=-1;break}const d=Math.min(Math.abs(rc.top-mid),Math.abs(rc.bottom-mid));if(d<best){best=d;id=el.id.slice(4)}}
+  if(innerHeight+scrollY>=document.documentElement.scrollHeight-4)id=secs[secs.length-1].id.slice(4);setActiveNav(id)}
+addEventListener('scroll',()=>{if(!spyRaf)spyRaf=requestAnimationFrame(spy)},{passive:true});
+function goSec(id){setActiveNav(id);spyLock=Date.now()+500;const el=document.getElementById('sec-'+id);if(!el)return;const sh=document.querySelector('.stickyhead');const off=sh?sh.getBoundingClientRect().height+57:120;scrollTo(0,Math.max(0,el.getBoundingClientRect().top+scrollY-off-6));requestAnimationFrame(()=>{const d=el.getBoundingClientRect().top-off-6;if(Math.abs(d)>4)scrollBy(0,d)})}
 function refreshSec(secId){if(view!=='album')return;const c=col();const sec=c.sections.find(x=>x.id===secId);const el=document.getElementById('sec-'+secId);
   if(!sec||!el){const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);return}
   const o=secBlock(c,sec,q.trim().toUpperCase());if(o)el.outerHTML=o.html(null);else el.remove();
@@ -958,7 +1013,7 @@ document.addEventListener('click',e=>{
    case 'io':openIO(true);break;
    case 'io-all':openIO(false);break;
    case 'doimp':doImport(document.getElementById('imp').value,view==='edit');break;
-   case 'newcol':openNewCol();break;
+   case 'newcol':tplQ='';openNewCol();break;
    case 'newblank':closeSheet();{const n={id:uid(),name:'Nueva colección',editorial:'',variants:[{id:uid(),name:'Básica',color:'#6f7d95',effect:'solid'},{id:uid(),name:'Especial',color:'#e2a33b',effect:'metal'}],share:defShare(),counts:{},sections:[]};n.sections.push(newSection({name:'Lista Básicas',to:100,variant:n.variants[0].id}));beginEdit(n,true);break}
    case 'newtpl':{const t=tplCache.list[i];const n=colFromTemplate(t);S.cols.push(n);save();closeSheet();cur=n.id;view='album';tab='album';render();scrollTo(0,0);toast('Colección creada desde la plantilla '+t.name);break}
    case 'addtx':openTx=uid();c.textures.push({id:openTx,name:'Brillo '+(c.textures.length+1),shape:'bubbles',count:8,size:'m',palette:'rainbow',anim:true});save();{const y=scrollY;render();scrollTo(0,y)}break;
@@ -1017,8 +1072,12 @@ document.addEventListener('click',e=>{
      save();refreshSec(sec.id);break}
    case 'secfold':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=!c1.ui.fold[b.dataset.s];save();refreshSec(b.dataset.s);break}
    case 'secnext':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=true;c1.ui.fold[b.dataset.n]=false;save();document.getElementById('main').innerHTML=albumHTML();document.getElementById('sec-'+b.dataset.n)?.scrollIntoView({block:'start'});break}
-   case 'goto':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};if(c1.ui.fold[b.dataset.s]){c1.ui.fold[b.dataset.s]=false;save();document.getElementById('main').innerHTML=albumHTML()}document.getElementById('sec-'+b.dataset.s)?.scrollIntoView({block:'start'});break}
+   case 'goto':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};if(c1.ui.fold[b.dataset.s]){c1.ui.fold[b.dataset.s]=false;save();document.getElementById('main').innerHTML=albumHTML()}goSec(b.dataset.s);break}
    case 'foldall':{const c1=col();c1.ui=c1.ui||{};const ids=[...document.querySelectorAll('.secnav [data-s]')].map(x=>x.dataset.s);const allF=ids.every(id=>(c1.ui.fold||{})[id]);c1.ui.fold=c1.ui.fold||{};ids.forEach(id=>c1.ui.fold[id]=!allF);save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,Math.min(y,document.body.scrollHeight));break}
+   case 'bulk':doBulk(b.dataset.k,b.dataset.s||null);break;
+   case 'pendok':{const fn=pend;hideConfirm();if(fn)fn();break}
+   case 'pendno':hideConfirm();break;
+   case 'hint':sheet(`<div class="sechd"><h2 style="flex:1">${tab==='rep'?'Repetidas':tab==='miss'?'Faltantes':'Álbum'}</h2><button class="btn sm" data-a="close">Entendido</button></div><p style="margin:8px 0 4px;line-height:1.55">${esc(hintText(col()))}</p>`);break;
    case 'repview':repView=b.dataset.k;{const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y)}break;
    case 'mqm':case 'mqp':{const k=b.dataset.k;mq.vals[k]=Math.max(0,Math.min(999,(mq.vals[k]||0)+(a==='mqp'?1:-1)));const o=document.getElementById('mq-'+vidOfSlot(k));if(o)o.textContent=mq.vals[k];break}
    case 'mqok':{const c1=col();Object.entries(mq.vals).forEach(([k,n])=>{if(n)c1.counts[k]=n;else delete c1.counts[k]});save();closeSheet();refreshSec(mq.ik.split('|')[0]);break}
@@ -1030,7 +1089,7 @@ document.addEventListener('click',e=>{
    case 'gpall':c.goalPairs=c.sections.flatMap(s=>isMulti(s)?secVars(c,s).map(id=>s.id+'@'+id):[s.id]);{const y=scrollY;render();scrollTo(0,y)}break;
    case 'gpnone':c.goalPairs=[];{const y=scrollY;render();scrollTo(0,y)}break;
    case 'goal':c.goal=b.dataset.k;{const y=scrollY;render();scrollTo(0,y)}break;
-   case 'mlink':linkSel=null;openLink(b.dataset.id);break;
+   case 'mlink':linkSel=null;tplQ='';openLink(b.dataset.id);break;
    case 'dolink':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplCache.list[+b.dataset.i];if(!b.dataset.ok){linkSel=+b.dataset.i;openLink(c1.id);break}const nm=c1.name;const lost=updateFromTemplate(c1,t);const c2=S.cols.find(x=>x.id===c1.id);c2.name=nm;save();linkSel=null;closeSheet();render();toast(lost?'Listo. '+lost+' figuritas no tenían lugar en la plantilla.':'Listo, ahora usa la plantilla '+t.name);break}
    case 'mupd':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplNewer(c1);if(!t)break;if(!b.dataset.ok){menuUpd=true;openColMenu(c1.id);break}const lost=updateFromTemplate(c1,t);menuUpd=false;closeSheet();render();toast(lost?'Actualizada. '+lost+' figuritas no tenían lugar en la nueva versión.':'Colección actualizada a la versión '+t.version);break}
    case 'colmenu':menuUpd=false;menuDel=false;openColMenu(b.dataset.id);break;
@@ -1045,7 +1104,7 @@ document.addEventListener('click',e=>{
    case 'reset0':c.counts={};updSaveBar();toast('Se pondrá todo en 0 al guardar');break;
   }
 });
-document.addEventListener('input',e=>{const ds=e.target.dataset||{};
+document.addEventListener('input',e=>{if(e.target.id==='tplq'){tplQ=e.target.value;const l=document.getElementById('tpllist');if(l&&tplRow)l.innerHTML=tplListHTML(tplRow);return}const ds=e.target.dataset||{};
   if(ds.varchk&&view==='edit'){const c=col(),sx=c.sections[+ds.s];const cur=new Set(sx.vars||[]);e.target.checked?cur.add(ds.varchk):cur.delete(ds.varchk);
     if(!cur.size){e.target.checked=true;toast('Deja marcada al menos una variante');return}sx.vars=c.variants.map(v=>v.id).filter(id=>cur.has(id));return}
   if(ds.sgoalv&&view==='edit'){const c=col(),sx=c.sections[+ds.s];const cur=new Set(sx.goalVars||[]);e.target.checked?cur.add(ds.sgoalv):cur.delete(ds.sgoalv);sx.goalVars=c.variants.map(v=>v.id).filter(id=>cur.has(id));return}
