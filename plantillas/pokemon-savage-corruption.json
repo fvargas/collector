@@ -1,0 +1,672 @@
+{
+  "formato": "album-figuritas",
+  "version": 2,
+  "name": "Pokémon Savage Corruption",
+  "editorial": "Flash Edition",
+  "variants": [
+    {
+      "id": "tornasol",
+      "name": "Tornasol",
+      "color": "#9fb7d6",
+      "effect": "iris"
+    },
+    {
+      "id": "vidrio-lote-1",
+      "name": "Vidrio lote 1",
+      "color": "#8fb4c9",
+      "effect": "solid",
+      "texture": "tx-vidrio"
+    },
+    {
+      "id": "vidrio-lote-2",
+      "name": "Vidrio lote 2",
+      "color": "#b4a0d8",
+      "effect": "solid",
+      "texture": "tx-vidrio"
+    },
+    {
+      "id": "sin-efecto",
+      "name": "Sin efecto",
+      "color": "#5b7fd6",
+      "effect": "solid"
+    },
+    {
+      "id": "plateado",
+      "name": "Plateado",
+      "color": "#aeb7c4",
+      "effect": "metal"
+    },
+    {
+      "id": "dorado",
+      "name": "Dorado",
+      "color": "#e2a33b",
+      "effect": "metal"
+    },
+    {
+      "id": "morado",
+      "name": "Morado",
+      "color": "#8b5cf6",
+      "effect": "metal"
+    },
+    {
+      "id": "plateado-vidrio",
+      "name": "Plateado vidrio",
+      "color": "#aeb7c4",
+      "effect": "metal",
+      "texture": "tx-vidrio"
+    },
+    {
+      "id": "dorado-vidrio",
+      "name": "Dorado vidrio",
+      "color": "#e2a33b",
+      "effect": "metal",
+      "texture": "tx-vidrio"
+    },
+    {
+      "id": "morado-fondo-plateado",
+      "name": "Morado fondo plateado",
+      "color": "#9a8cc8",
+      "effect": "metal"
+    },
+    {
+      "id": "morado-fondo-dorado",
+      "name": "Morado fondo dorado",
+      "color": "#a46ad0",
+      "effect": "metal",
+      "texture": "tx-escarcha"
+    },
+    {
+      "id": "verde",
+      "name": "Verde",
+      "color": "#2fa36b",
+      "effect": "solid"
+    },
+    {
+      "id": "azul",
+      "name": "Azul",
+      "color": "#3f7be3",
+      "effect": "solid"
+    },
+    {
+      "id": "rojo",
+      "name": "Rojo",
+      "color": "#e0533d",
+      "effect": "solid"
+    }
+  ],
+  "share": {
+    "title": "📒 {nombre}",
+    "missTitle": "❌ Faltantes ({n}):",
+    "repTitle": "🔁 Repetidas ({n}):",
+    "sep": ", ",
+    "ranges": false,
+    "incMiss": true,
+    "incRep": true,
+    "secName": true,
+    "nameOwnLine": true,
+    "showVariant": false,
+    "repCount": false
+  },
+  "counts": {},
+  "sections": [
+    {
+      "id": "kanto",
+      "name": "Kanto: Primera Generación",
+      "shareName": "",
+      "emoji": "",
+      "kind": "num",
+      "prefix": "",
+      "from": 1,
+      "to": 151,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "tornasol",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": false,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "tornasol",
+        "vidrio-lote-1",
+        "vidrio-lote-2"
+      ]
+    },
+    {
+      "id": "johto",
+      "name": "Johto: Segunda Generación",
+      "shareName": "",
+      "emoji": "",
+      "kind": "num",
+      "prefix": "",
+      "from": 152,
+      "to": 251,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "tornasol",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "tornasol",
+        "vidrio-lote-1",
+        "vidrio-lote-2"
+      ]
+    },
+    {
+      "id": "sectorizada-s",
+      "name": "Sectorizada S",
+      "shareName": "",
+      "emoji": "",
+      "kind": "code",
+      "prefix": "S",
+      "from": 1,
+      "to": 39,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "sin-efecto",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "dk",
+      "name": "Lista DK",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "DK01) VENUSAUR",
+          "share": "DK01) VENUSAUR"
+        },
+        {
+          "app": "DK02) CHARIZARD",
+          "share": "DK02) CHARIZARD"
+        },
+        {
+          "app": "DK03) BLASTOISE",
+          "share": "DK03) BLASTOISE"
+        },
+        {
+          "app": "DK04) PIKACHU",
+          "share": "DK04) PIKACHU"
+        },
+        {
+          "app": "DK05) NINETALES",
+          "share": "DK05) NINETALES"
+        },
+        {
+          "app": "DK06) JIGGLYPUFF",
+          "share": "DK06) JIGGLYPUFF"
+        },
+        {
+          "app": "DK07) MEOWTH",
+          "share": "DK07) MEOWTH"
+        },
+        {
+          "app": "DK08) PSYDUCK",
+          "share": "DK08) PSYDUCK"
+        },
+        {
+          "app": "DK09) ARCANINE",
+          "share": "DK09) ARCANINE"
+        },
+        {
+          "app": "DK10) ALAKAZAM",
+          "share": "DK10) ALAKAZAM"
+        },
+        {
+          "app": "DK11) MACHAMP",
+          "share": "DK11) MACHAMP"
+        },
+        {
+          "app": "DK12) GENGAR",
+          "share": "DK12) GENGAR"
+        },
+        {
+          "app": "DK13) MR. MIME",
+          "share": "DK13) MR. MIME"
+        },
+        {
+          "app": "DK14) SCYTHER",
+          "share": "DK14) SCYTHER"
+        },
+        {
+          "app": "DK15) GYARADOS",
+          "share": "DK15) GYARADOS"
+        },
+        {
+          "app": "DK16) LAPRAS",
+          "share": "DK16) LAPRAS"
+        },
+        {
+          "app": "DK17) EEVEE",
+          "share": "DK17) EEVEE"
+        },
+        {
+          "app": "DK18) VAPOREON",
+          "share": "DK18) VAPOREON"
+        },
+        {
+          "app": "DK19) JOLTEON",
+          "share": "DK19) JOLTEON"
+        },
+        {
+          "app": "DK20) FLAREON",
+          "share": "DK20) FLAREON"
+        },
+        {
+          "app": "DK21) SNORLAX",
+          "share": "DK21) SNORLAX"
+        },
+        {
+          "app": "DK22) DRAGONITE",
+          "share": "DK22) DRAGONITE"
+        },
+        {
+          "app": "DK23) CROBAT",
+          "share": "DK23) CROBAT"
+        },
+        {
+          "app": "DK24) TOGEPI",
+          "share": "DK24) TOGEPI"
+        },
+        {
+          "app": "DK25) AMPHAROS",
+          "share": "DK25) AMPHAROS"
+        },
+        {
+          "app": "DK26) MARILL",
+          "share": "DK26) MARILL"
+        },
+        {
+          "app": "DK27) ESPEON",
+          "share": "DK27) ESPEON"
+        },
+        {
+          "app": "DK28) UMBREON",
+          "share": "DK28) UMBREON"
+        },
+        {
+          "app": "DK29) STEELIX",
+          "share": "DK29) STEELIX"
+        },
+        {
+          "app": "DK30) SCIZOR",
+          "share": "DK30) SCIZOR"
+        },
+        {
+          "app": "DK31) HERACROSS",
+          "share": "DK31) HERACROSS"
+        },
+        {
+          "app": "DK32) SKARMORY",
+          "share": "DK32) SKARMORY"
+        },
+        {
+          "app": "DK33) HOUNDOOM",
+          "share": "DK33) HOUNDOOM"
+        },
+        {
+          "app": "DK34) DONPHAN",
+          "share": "DK34) DONPHAN"
+        },
+        {
+          "app": "DK35) BLISSEY",
+          "share": "DK35) BLISSEY"
+        },
+        {
+          "app": "DK36) TYRANITAR",
+          "share": "DK36) TYRANITAR"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "plateado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "plateado",
+        "dorado",
+        "morado"
+      ]
+    },
+    {
+      "id": "lg",
+      "name": "Lista LG",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "LG01) ARTICUNO",
+          "share": "LG01) ARTICUNO"
+        },
+        {
+          "app": "LG02) ZAPDOS",
+          "share": "LG02) ZAPDOS"
+        },
+        {
+          "app": "LG03) MOLTRES",
+          "share": "LG03) MOLTRES"
+        },
+        {
+          "app": "LG04) RAIKOU",
+          "share": "LG04) RAIKOU"
+        },
+        {
+          "app": "LG05) ENTEI",
+          "share": "LG05) ENTEI"
+        },
+        {
+          "app": "LG06) SUICUNE",
+          "share": "LG06) SUICUNE"
+        },
+        {
+          "app": "LG07) HO-OH",
+          "share": "LG07) HO-OH"
+        },
+        {
+          "app": "LG08) LUGIA",
+          "share": "LG08) LUGIA"
+        },
+        {
+          "app": "LG09) MEWTWO",
+          "share": "LG09) MEWTWO"
+        },
+        {
+          "app": "LG10) GALARIAN ARTICUNO",
+          "share": "LG10) GALARIAN ARTICUNO"
+        },
+        {
+          "app": "LG11) GALARIAN ZAPDOS",
+          "share": "LG11) GALARIAN ZAPDOS"
+        },
+        {
+          "app": "LG12) GALARIAN MOLTRES",
+          "share": "LG12) GALARIAN MOLTRES"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "plateado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "plateado",
+        "morado"
+      ]
+    },
+    {
+      "id": "synthetic",
+      "name": "Lista Synthetic Evolve",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "SY1) MEWTWO SHADOW",
+          "share": "SY1) MEWTWO SHADOW"
+        },
+        {
+          "app": "SY2) MEWTWO MEGA SHADOW",
+          "share": "SY2) MEWTWO MEGA SHADOW"
+        },
+        {
+          "app": "SY3) LUGIA SHADOW",
+          "share": "SY3) LUGIA SHADOW"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "plateado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "plateado",
+        "morado"
+      ]
+    },
+    {
+      "id": "mythical",
+      "name": "Lista Mythical",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "MY1) MEW",
+          "share": "MY1) MEW"
+        },
+        {
+          "app": "MY2) CELEBI",
+          "share": "MY2) CELEBI"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "plateado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "plateado",
+        "morado"
+      ]
+    },
+    {
+      "id": "reliques",
+      "name": "Lista Reliques",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "1) ZAPDOS",
+          "share": "1) ZAPDOS"
+        },
+        {
+          "app": "2) ARTICUNO",
+          "share": "2) ARTICUNO"
+        },
+        {
+          "app": "3) MOLTRES",
+          "share": "3) MOLTRES"
+        },
+        {
+          "app": "4) LUGIA",
+          "share": "4) LUGIA"
+        },
+        {
+          "app": "5) HO-OH",
+          "share": "5) HO-OH"
+        },
+        {
+          "app": "6) MEW",
+          "share": "6) MEW"
+        },
+        {
+          "app": "7) CELEBI",
+          "share": "7) CELEBI"
+        },
+        {
+          "app": "8) KABUTOPS",
+          "share": "8) KABUTOPS"
+        },
+        {
+          "app": "9) AERODACTYL",
+          "share": "9) AERODACTYL"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "plateado-vidrio",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "plateado-vidrio",
+        "dorado-vidrio",
+        "morado-fondo-plateado",
+        "morado-fondo-dorado"
+      ]
+    },
+    {
+      "id": "jumbos",
+      "name": "Jumbos",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "1) SHADOW LUGIA",
+          "share": "1) SHADOW LUGIA"
+        },
+        {
+          "app": "2) CLONE CHARIZARD",
+          "share": "2) CLONE CHARIZARD"
+        },
+        {
+          "app": "3) RED GYARADOS",
+          "share": "3) RED GYARADOS"
+        },
+        {
+          "app": "4) SHINY UMBREON",
+          "share": "4) SHINY UMBREON"
+        },
+        {
+          "app": "5) CRYSTAL ONIX",
+          "share": "5) CRYSTAL ONIX"
+        },
+        {
+          "app": "6) MEWTWO",
+          "share": "6) MEWTWO"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "dorado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "dorado",
+        "verde",
+        "azul",
+        "rojo"
+      ]
+    }
+  ],
+  "goal": "all",
+  "textures": [
+    {
+      "id": "tx-vidrio",
+      "name": "Vidrio",
+      "shape": "shards",
+      "count": 22,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-laser",
+      "name": "Láser",
+      "shape": "lines",
+      "count": 14,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-estrella",
+      "name": "Estrella",
+      "shape": "stars",
+      "count": 12,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-escarcha",
+      "name": "Escarcha",
+      "shape": "dots",
+      "count": 120,
+      "size": "s",
+      "palette": "gold",
+      "anim": true
+    },
+    {
+      "id": "tx-burbuja",
+      "name": "Burbuja",
+      "shape": "bubbles",
+      "count": 8,
+      "size": "m",
+      "palette": "white",
+      "anim": false
+    }
+  ],
+  "plantilla": {
+    "id": "pokemon-savage-corruption",
+    "version": 1,
+    "descripcion": "Kanto y Johto (tornasol, vidrio lote 1 y 2), Sectorizada S, listas DK, LG, Synthetic Evolve, Mythical, Reliques y Jumbos."
+  }
+}

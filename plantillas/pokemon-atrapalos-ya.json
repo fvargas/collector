@@ -1,0 +1,446 @@
+{
+  "formato": "album-figuritas",
+  "version": 2,
+  "name": "Pokémon Atrápalos ya!",
+  "editorial": "Electric Corporation",
+  "variants": [
+    {
+      "id": "basica",
+      "name": "Básica",
+      "color": "#6f7d95",
+      "effect": "solid"
+    },
+    {
+      "id": "dorado",
+      "name": "Dorado",
+      "color": "#e2a33b",
+      "effect": "metal"
+    },
+    {
+      "id": "plateado-vidrio",
+      "name": "Plateado vidrio",
+      "color": "#aeb7c4",
+      "effect": "metal",
+      "texture": "tx-vidrio"
+    }
+  ],
+  "share": {
+    "title": "📒 {nombre}",
+    "missTitle": "❌ Faltantes ({n}):",
+    "repTitle": "🔁 Repetidas ({n}):",
+    "sep": ", ",
+    "ranges": false,
+    "incMiss": true,
+    "incRep": true,
+    "secName": true,
+    "nameOwnLine": true,
+    "showVariant": false,
+    "repCount": false
+  },
+  "counts": {},
+  "sections": [
+    {
+      "id": "kanto",
+      "name": "Kanto: Primera Generación",
+      "shareName": "",
+      "emoji": "",
+      "kind": "num",
+      "prefix": "",
+      "from": 1,
+      "to": 151,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "basica",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": false,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "johto",
+      "name": "Johto: Segunda Generación",
+      "shareName": "",
+      "emoji": "",
+      "kind": "num",
+      "prefix": "",
+      "from": 152,
+      "to": 251,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "basica",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "duos-trios",
+      "name": "Duos/Trios",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "E1) HITMONCHAN Y PIKACHU",
+          "share": "E1) HITMONCHAN Y PIKACHU"
+        },
+        {
+          "app": "E2) WIGGLYTUFF Y PSYDUCK",
+          "share": "E2) WIGGLYTUFF Y PSYDUCK"
+        },
+        {
+          "app": "E3) HAUNTER Y GENGAR",
+          "share": "E3) HAUNTER Y GENGAR"
+        },
+        {
+          "app": "E4) PIDGEOTTO Y GEODUDE",
+          "share": "E4) PIDGEOTTO Y GEODUDE"
+        },
+        {
+          "app": "E5) PIKACHU Y TOGEPI",
+          "share": "E5) PIKACHU Y TOGEPI"
+        },
+        {
+          "app": "E6) PRIMEAPE Y CHARMANDER",
+          "share": "E6) PRIMEAPE Y CHARMANDER"
+        },
+        {
+          "app": "E7) SQUIRTLE Y BULBASAUR",
+          "share": "E7) SQUIRTLE Y BULBASAUR"
+        },
+        {
+          "app": "E8) BULBASAUR, VULPIX Y PIKACHU",
+          "share": "E8) BULBASAUR, VULPIX Y PIKACHU"
+        },
+        {
+          "app": "E9) CUBONE Y SNUBBULL",
+          "share": "E9) CUBONE Y SNUBBULL"
+        }
+      ],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "basica",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "especiales",
+      "name": "Especiales",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "003) VENUSAUR",
+          "share": "003) VENUSAUR"
+        },
+        {
+          "app": "006) CHARIZARD",
+          "share": "006) CHARIZARD"
+        },
+        {
+          "app": "009) BLASTOISE",
+          "share": "009) BLASTOISE"
+        },
+        {
+          "app": "025) PIKACHU",
+          "share": "025) PIKACHU"
+        },
+        {
+          "app": "052) MEOWTH",
+          "share": "052) MEOWTH"
+        },
+        {
+          "app": "059) ARCANINE",
+          "share": "059) ARCANINE"
+        },
+        {
+          "app": "093) HAUNTER",
+          "share": "093) HAUNTER"
+        },
+        {
+          "app": "094) GENGAR",
+          "share": "094) GENGAR"
+        },
+        {
+          "app": "129) MAGIKARP",
+          "share": "129) MAGIKARP"
+        },
+        {
+          "app": "132) DITTO",
+          "share": "132) DITTO"
+        },
+        {
+          "app": "133) EEVEE",
+          "share": "133) EEVEE"
+        },
+        {
+          "app": "134) VAPOREON",
+          "share": "134) VAPOREON"
+        },
+        {
+          "app": "135) JOLTEON",
+          "share": "135) JOLTEON"
+        },
+        {
+          "app": "136) FLAREON",
+          "share": "136) FLAREON"
+        },
+        {
+          "app": "143) SNORLAX",
+          "share": "143) SNORLAX"
+        },
+        {
+          "app": "144) ARTICUNO",
+          "share": "144) ARTICUNO"
+        },
+        {
+          "app": "145) ZAPDOS",
+          "share": "145) ZAPDOS"
+        },
+        {
+          "app": "146) MOLTRES",
+          "share": "146) MOLTRES"
+        },
+        {
+          "app": "149) DRAGONITE",
+          "share": "149) DRAGONITE"
+        },
+        {
+          "app": "150) MEWTWO",
+          "share": "150) MEWTWO"
+        },
+        {
+          "app": "151) MEW",
+          "share": "151) MEW"
+        },
+        {
+          "app": "152) CHIKORITA",
+          "share": "152) CHIKORITA"
+        },
+        {
+          "app": "155) CYNDAQUIL",
+          "share": "155) CYNDAQUIL"
+        },
+        {
+          "app": "158) TOTODILE",
+          "share": "158) TOTODILE"
+        },
+        {
+          "app": "164) NOCTOWL",
+          "share": "164) NOCTOWL"
+        },
+        {
+          "app": "196) ESPEON",
+          "share": "196) ESPEON"
+        },
+        {
+          "app": "197) UMBREON",
+          "share": "197) UMBREON"
+        },
+        {
+          "app": "202) WOBBUFFET",
+          "share": "202) WOBBUFFET"
+        },
+        {
+          "app": "212) SCIZOR",
+          "share": "212) SCIZOR"
+        },
+        {
+          "app": "243) RAIKOU",
+          "share": "243) RAIKOU"
+        },
+        {
+          "app": "244) ENTEI",
+          "share": "244) ENTEI"
+        },
+        {
+          "app": "245) SUICUNE",
+          "share": "245) SUICUNE"
+        },
+        {
+          "app": "248) TYRANITAR",
+          "share": "248) TYRANITAR"
+        },
+        {
+          "app": "249) LUGIA",
+          "share": "249) LUGIA"
+        },
+        {
+          "app": "250) HO-OH",
+          "share": "250) HO-OH"
+        },
+        {
+          "app": "251) CELEBI",
+          "share": "251) CELEBI"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "dorado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "limited",
+      "name": "Limited Edition",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "1) CHARIZARD",
+          "share": "1) CHARIZARD"
+        },
+        {
+          "app": "2) MEWTWO",
+          "share": "2) MEWTWO"
+        },
+        {
+          "app": "3) PIKACHU",
+          "share": "3) PIKACHU"
+        },
+        {
+          "app": "4) EEVEE",
+          "share": "4) EEVEE"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "plateado-vidrio",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "jumbos",
+      "name": "Jumbos",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "1) GASTLY HAUNTER GENGAR",
+          "share": "1) GASTLY, HAUNTER Y GENGAR"
+        },
+        {
+          "app": "2) VAPOREON FLAREON JOLTEON",
+          "share": "2) VAPOREON, FLAREON Y JOLTEON"
+        },
+        {
+          "app": "3) MEW MEWTWO",
+          "share": "3) MEW Y MEWTWO"
+        },
+        {
+          "app": "4) SQUIRTLE CHARMANDER",
+          "share": "4) SQUIRTLE Y CHARMANDER"
+        },
+        {
+          "app": "5) EQUIPO ASH",
+          "share": "5) EQUIPO DE ASH KETCHUM"
+        },
+        {
+          "app": "6) PAREJA BUTTERFREE",
+          "share": "6) PAREJA DE BUTTERFREE"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "dorado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    }
+  ],
+  "goal": "all",
+  "textures": [
+    {
+      "id": "tx-vidrio",
+      "name": "Vidrio",
+      "shape": "shards",
+      "count": 22,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-laser",
+      "name": "Láser",
+      "shape": "lines",
+      "count": 14,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-estrella",
+      "name": "Estrella",
+      "shape": "stars",
+      "count": 12,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-escarcha",
+      "name": "Escarcha",
+      "shape": "dots",
+      "count": 120,
+      "size": "s",
+      "palette": "gold",
+      "anim": true
+    },
+    {
+      "id": "tx-burbuja",
+      "name": "Burbuja",
+      "shape": "bubbles",
+      "count": 8,
+      "size": "m",
+      "palette": "white",
+      "anim": false
+    }
+  ],
+  "plantilla": {
+    "id": "pokemon-atrapalos-ya",
+    "version": 1,
+    "descripcion": "Kanto 1-151, Johto 152-251, Duos/Trios, Especiales dorados, Limited Edition y Jumbos."
+  }
+}

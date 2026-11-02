@@ -281,7 +281,11 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .confirmbar{position:fixed;left:0;right:0;bottom:0;z-index:25;display:flex;gap:8px;align-items:center;background:var(--surface);border-top:2px solid var(--accent);box-shadow:0 -10px 24px -10px rgba(0,0,0,.5);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .confirmbar .cb-txt{flex:1;min-width:0}.confirmbar b{display:block;font-weight:700;line-height:1.25}.confirmbar small{display:block;color:var(--muted);font-size:12.5px}
 .tplq{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:9px 12px;margin-bottom:8px}
-.tplgrp{margin-bottom:10px}.tplh{display:flex;gap:8px;align-items:baseline;font:700 13px var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:6px 2px 0}.tplh .muted{font:600 12px var(--f-mono)}
+.tplgrp{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--bg);overflow:hidden}
+.tplh{display:flex;gap:12px;align-items:center;width:100%;border:0;background:var(--surface2);padding:10px 12px;text-align:left}
+.tplic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--accent);color:var(--accent-fg);font:800 16px var(--f-display);flex:none}
+.tpln{flex:1;min-width:0}.tpln b{display:block}.tpln small{color:var(--muted);font-size:12.5px}
+.tplgrp .menu{padding:0 12px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -294,7 +298,7 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <style id="txs"></style>
 
 <script>
-const APP_VER='18';
+const APP_VER='19';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -834,8 +838,11 @@ let tplQ='';
 function tplListHTML(rowFn){const tl=tplCache;if(!tl)return '<div class="empty">Buscando plantillas…</div>';if(!tl.ok)return '<div class="empty">No hay plantillas publicadas en esta app.</div>';if(!tl.list.length)return '<div class="empty">La carpeta de plantillas está vacía.</div>';
   const qn=normTxt(tplQ);const groups=new Map();tl.list.forEach((t,i)=>{if(qn&&!normTxt([t.name,t.editorial,t.desc].join(' ')).includes(qn))return;const ed=t.editorial||'Sin editorial';if(!groups.has(ed))groups.set(ed,[]);groups.get(ed).push([t,i])});
   if(!groups.size)return `<div class="empty">Ninguna plantilla coincide con «${esc(tplQ)}».</div>`;
-  return [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'es')).map(([ed,l])=>`<div class="tplgrp"><div class="tplh">${esc(ed)}<span class="muted">${l.length}</span></div><div class="menu">${l.sort((a,b)=>a[0].name.localeCompare(b[0].name,'es')).map(([t,i])=>rowFn(t,i)).join('')}</div></div>`).join('')}
-function tplSearchHTML(){const tl=tplCache;return tl&&tl.ok&&tl.list.length>3||tplQ?`<input type="search" id="tplq" class="tplq" placeholder="Buscar plantilla o editorial" value="${esc(tplQ)}" autocomplete="off">`:''}
+  const multiG=groups.size>1&&!qn;
+  return [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0],'es')).map(([ed,l])=>{const open=!multiG||tplOpen.has(ed);
+    return `<div class="tplgrp ${open?'open':''}"><button class="tplh" data-a="tplgrp" data-ed="${esc(ed)}" aria-expanded="${open}"><span class="tplic">${esc(ed.slice(0,1).toUpperCase())}</span><span class="tpln"><b>${esc(ed)}</b><small>${l.length} ${l.length>1?'plantillas':'plantilla'}</small></span><span class="chev">${open?'▾':'▸'}</span></button>${open?`<div class="menu">${l.sort((a,b)=>a[0].name.localeCompare(b[0].name,'es')).map(([t,i])=>rowFn(t,i)).join('')}</div>`:''}</div>`}).join('')}
+const tplOpen=new Set();
+function tplSearchHTML(){const tl=tplCache;return tl&&tl.ok&&tl.list.length||tplQ?`<input type="search" id="tplq" class="tplq" placeholder="Buscar plantilla o editorial" value="${esc(tplQ)}" autocomplete="off">`:''}
 let tplRow=null;
 
 /* ---------- Compartir ---------- */
@@ -1074,6 +1081,7 @@ document.addEventListener('click',e=>{
    case 'secnext':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=true;c1.ui.fold[b.dataset.n]=false;save();document.getElementById('main').innerHTML=albumHTML();document.getElementById('sec-'+b.dataset.n)?.scrollIntoView({block:'start'});break}
    case 'goto':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};if(c1.ui.fold[b.dataset.s]){c1.ui.fold[b.dataset.s]=false;save();document.getElementById('main').innerHTML=albumHTML()}goSec(b.dataset.s);break}
    case 'foldall':{const c1=col();c1.ui=c1.ui||{};const ids=[...document.querySelectorAll('.secnav [data-s]')].map(x=>x.dataset.s);const allF=ids.every(id=>(c1.ui.fold||{})[id]);c1.ui.fold=c1.ui.fold||{};ids.forEach(id=>c1.ui.fold[id]=!allF);save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,Math.min(y,document.body.scrollHeight));break}
+   case 'tplgrp':{const ed=b.dataset.ed;tplOpen.has(ed)?tplOpen.delete(ed):tplOpen.add(ed);const l=document.getElementById('tpllist');if(l&&tplRow)l.innerHTML=tplListHTML(tplRow);break}
    case 'bulk':doBulk(b.dataset.k,b.dataset.s||null);break;
    case 'pendok':{const fn=pend;hideConfirm();if(fn)fn();break}
    case 'pendno':hideConfirm();break;

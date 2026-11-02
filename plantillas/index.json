@@ -1,5 +1,7 @@
 {
   "plantillas": [
-    "anime-world.json"
+    "anime-world.json",
+    "pokemon-atrapalos-ya.json",
+    "pokemon-savage-corruption.json"
   ]
 }
