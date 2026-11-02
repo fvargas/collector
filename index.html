@@ -254,6 +254,8 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 
 .vchip.off{opacity:.45}.vchip.meta{background:color-mix(in oklab,var(--accent) 18%,var(--surface2));color:var(--fg);padding-left:9px}
 .gpairs{display:grid;gap:10px}.gsec b{display:block;font-size:13.5px;margin-bottom:4px}.gsec .vchecks{margin:0}
+.tile.na{opacity:.35;border-style:dashed}
+.mrow.own{grid-template-columns:44px 1fr auto}.own-t{min-width:128px;justify-content:center}.own-t:disabled{opacity:.6}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -343,11 +345,11 @@ function seedDemo(){
 const LS='album-figuritas.v1';
 let S;
 try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
-if(!S||!Array.isArray(S.cols))S={cols:[seedAnime(),seedDemo()],v:2};
+if(!S||!Array.isArray(S.cols))S={cols:[seedAnime()],v:2};
 if((S.v||1)<2){S.cols.forEach(c=>{c.share=Object.assign(defShare(),c.share,{nameOwnLine:true});c.sections.forEach(x=>x.breakShare=true)});S.v=2;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
 function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
 
-let view='home',cur=null,tab='album',q='';
+let view='home',cur=null,tab='album',q='',repView='all';
 let draft=null,draftBase='',draftNew=false;
 const col=()=>view==='edit'&&draft?ensure(draft):ensure(S.cols.find(c=>c.id===cur));
 function beginEdit(c,isNew,t){draft=ensure(JSON.parse(JSON.stringify(c)));draftBase=JSON.stringify(draft);draftNew=!!isNew;cur=draft.id;view='edit';etab=t||'secs';armed=null;openVar=null;openTx=null;closeSheet();render();scrollTo(0,0)}
@@ -400,20 +402,25 @@ function stats(c){let t=0,h=0,nt=0,nh=0,st=0,sh=0,rep=0;for(const s of c.section
 function myNeeds(c){const slot=new Set(),item=new Set(),extra=new Map();
   for(const s of c.sections)for(const it of items(s)){const x=itemState(c,s,it);if(x.missItem)item.add(key(s,it));x.missSlots.forEach(m=>slot.add(m.k));x.extras.forEach(e=>extra.set(e.k,e.e))}
   return {slot,item,extra}}
-function activeVar(c){const used=[];c.sections.forEach(s=>secVars(c,s).forEach(id=>{if(!used.includes(id))used.push(id)}));if(!used.length)return {used,act:null};return {used,act:used.includes(c.activeVar)?c.activeVar:used[0]}}
+function slotBase(c,k){const {sec,it}=findItem(c,k);if(!sec||!it)return null;const st=itemState(c,sec,it);const z=st.sl.find(x=>x.k===k);if(!z)return null;
+  if(goalOf(c)==='any'){if(!st.tot)return null;const keep=st.sl.find(x=>x.n>0);return keep&&keep.k===k?1:0}
+  return z.goal?(z.n>0?1:null):0}
+function repTileHTML(c,s,it,z,e,na){const v=varOf(c,z.vid);
+  return `<button class="tile ${e>0?'has':''} ${na?'na':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(z.k)}" title="${esc(it.share+(vidOfSlot(z.k)?' · '+v.name:''))}"><span class="lb">${esc(it.app)}</span>${e>0?`<span class="n">×${e}</span>`:''}</button>`}
+function activeVar(c){const used=[];c.sections.forEach(s=>secVars(c,s).forEach(id=>{if(inGoalSec(c,s,id)&&!used.includes(id))used.push(id)}));if(!used.length)return {used,act:null};return {used,act:used.includes(c.activeVar)?c.activeVar:used[0]}}
 function slotTileHTML(c,s,it,slot,n,badge){const v=varOf(c,slot.vid);
   return `<button class="tile ${n?'has':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(slot.k)}" title="${esc(it.share+(isMulti(s)?' · '+v.name:''))}"><span class="lb">${esc(it.app)}</span>${badge>1?`<span class="n">×${badge}</span>`:''}${it.special&&!n?'<span class="st">★</span>':''}</button>`}
-function mtileHTML(c,s,it){const x=itemState(c,s,it);const {act}=activeVar(c);const owned=x.sl.filter(z=>z.n>0);
+function mtileHTML(c,s,it){const x=itemState(c,s,it);const {act}=activeVar(c);const owned=x.sl.filter(z=>z.n>0&&z.goal);const ex=x.extras.reduce((a,z)=>a+z.e,0);
   const show=owned.find(z=>z.vid===act)||owned[0]||x.sl.find(z=>z.vid===act)||x.sl[0];const v=varOf(c,show?show.vid:null);
   const cls=x.complete?'has':owned.length?'has part':'';
-  const dots=x.sl.filter(z=>z.goal||z.n).slice(0,8).map(z=>{const dv=varOf(c,z.vid);return `<i class="${z.n?'on':''}" style="--dc:${esc(dv.color)}"></i>`}).join('');
-  return `<button class="tile mt ${cls} ${it.special?'sp':''} v-${v.effect} ${owned.length?txCls(c,v):''}" style="${esc(vStyle(v))}" data-mk="${esc(key(s,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${x.tot>1?`<span class="n">×${x.tot}</span>`:''}<span class="dots">${dots}</span></button>`}
+  const dots=x.sl.filter(z=>z.goal).slice(0,8).map(z=>{const dv=varOf(c,z.vid);return `<i class="${z.n?'on':''}" style="--dc:${esc(dv.color)}"></i>`}).join('');
+  return `<button class="tile mt ${cls} ${it.special?'sp':''} v-${v.effect} ${owned.length?txCls(c,v):''}" style="${esc(vStyle(v))}" data-mk="${esc(key(s,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${ex?`<span class="n">+${ex}</span>`:''}<span class="dots">${dots}</span></button>`}
 let mq=null;
-function openMulti(ik){const c=col();const {sec,it}=findItem(c,ik);if(!sec||!it)return;mq={ik,vals:{}};slotsOf(c,sec,it).forEach(z=>mq.vals[z.k]=c.counts[z.k]||0);
+function openMulti(ik){const c=col();const {sec,it}=findItem(c,ik);if(!sec||!it)return;const sl=slotsOf(c,sec,it).filter(z=>inGoalSec(c,sec,z.vid));mq={ik,vals:{}};sl.forEach(z=>mq.vals[z.k]=c.counts[z.k]||0);
   const label=sec.kind==='num'?'Figurita '+it.share:it.share;
   sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">${esc(label)}</h2><button class="btn sm" data-a="close">Cerrar</button></div>
-  <p class="muted" style="font-size:13px;margin:2px 0 6px">${esc(sec.name)} · ${esc(goalLabel(c,sec))}</p>
-  <div class="mrows">${slotsOf(c,sec,it).map(z=>{const v=varOf(c,z.vid);return `<div class="mrow">${vPreview(c,v,it.app)}<span class="mname"><b>${esc(v.name)}</b><small>${inGoalSec(c,sec,z.vid)?'':'Fuera de tu meta'}</small></span><button class="qb sm" data-a="mqm" data-k="${esc(z.k)}" aria-label="Quitar ${esc(v.name)}">−</button><output id="mq-${esc(z.vid)}">${mq.vals[z.k]}</output><button class="qb sm" data-a="mqp" data-k="${esc(z.k)}" aria-label="Agregar ${esc(v.name)}">+</button></div>`}).join('')}</div>
+  <p class="muted" style="font-size:13px;margin:2px 0 6px">${esc(sec.name)} · marca en qué variantes la tienes. Las repetidas van en la pestaña Repetidas.</p>
+  <div class="mrows">${sl.map(z=>{const v=varOf(c,z.vid);const n=mq.vals[z.k];return `<div class="mrow own">${vPreview(c,v,it.app)}<span class="mname"><b>${esc(v.name)}</b><small>${n>1?'+'+(n-1)+' repetidas':''}</small></span><button class="btn own-t ${n?'pri':''}" data-a="mqt" data-k="${esc(z.k)}" ${n>1?'disabled':''} aria-pressed="${!!n}">${n?'La tengo ✓':'No la tengo'}</button></div>`}).join('')}</div>
   <div class="qacts" style="margin-top:14px"><button class="btn" data-a="close">Cancelar</button><button class="btn pri" data-a="mqok">Confirmar</button></div>`)}
 function migrateSecCounts(c,s,toMulti){const its=items(s);
   if(toMulti){its.forEach(it=>{const k=key(s,it),n=c.counts[k];if(n){const vid=s.vars.includes(legacyVid(s,it))?legacyVid(s,it):s.vars[0];c.counts[k+'@'+vid]=(c.counts[k+'@'+vid]||0)+n;delete c.counts[k]}})}
@@ -448,6 +455,11 @@ function homeHTML(){S.cols.forEach(ensure);S.groups=S.groups||[];S.sort=S.sort||
   <p class="muted" style="font-size:13px;margin-top:18px">Los datos se guardan en este navegador. Exporta el JSON de vez en cuando como respaldo.</p>`;
 }
 let gDel=null;
+function openSplit(i){const c=col();const s0=c.sections[i];
+  sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">Copias por variante</h2><button class="btn sm" data-a="close">Cerrar</button></div>
+  <p class="muted" style="font-size:13px;margin:2px 0 10px">Crea una sección igual a «${esc(s0.name)}» por cada variante que marques, por ejemplo «${esc(s0.name.replace(/\s*\([^)]*\)\s*$/,''))} (Verde)». Cada una se marca, se ordena y se comparte por separado.</p>
+  <div class="vchecks">${c.variants.filter(v=>v.id!==s0.variant).map(v=>`<label class="vck"><input type="checkbox" id="sp-${v.id}" data-splitv="${v.id}"><i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>${esc(v.name)}</label>`).join('')}</div>
+  <button class="btn pri" style="margin-top:10px" data-a="dosplit" data-i="${i}">Crear secciones</button>`)}
 function openGroups(){S.groups=S.groups||[];
   sheet(`<div class="sechd"><h2 style="flex:1">Grupos</h2><button class="btn sm" data-a="close">Listo</button></div>
   <p class="muted" style="font-size:13px;margin:4px 0 10px">Agrupa tus colecciones (por ejemplo "Mundial 2026" o "Anime"). Si no creas ninguno, se muestran todas juntas.</p>
@@ -465,7 +477,7 @@ function openGroupPick(id){const c=S.cols.find(x=>x.id===id);S.groups=S.groups||
 function ring(p){const r=26,C=2*Math.PI*r;return `<span class="ring"><svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*p/100} ${C}" transform="rotate(-90 32 32)"/></svg><span>${p}%</span></span>`}
 
 function tileHTML(c,sec,it){const n=c.counts[key(sec,it)]||0;const v=varOf(c,it.special?(sec.specialVariant||sec.variant):sec.variant);
-  return `<button class="tile ${n?'has':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(key(sec,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${n>1?`<span class="n">×${n}</span>`:''}${it.special&&!n?'<span class="st">★</span>':''}</button>`}
+  return `<button class="tile ${n?'has':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(key(sec,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${n>1?`<span class="n">+${n-1}</span>`:''}${it.special&&!n?'<span class="st">★</span>':''}</button>`}
 
 function chips(c,sec){const vs=[];
   if(isMulti(sec)){secVars(c,sec).forEach(id=>vs.push([varOf(c,id),'',!inGoalSec(c,sec,id)]))}
@@ -479,23 +491,24 @@ function vsubHTML(c,vid,n){const v=varOf(c,vid);return `<div class="vsub" style=
 function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;const g=goalOf(c);const {used,act}=activeVar(c);
   let h=`<div class="sum">${ring(p)}<div style="min-width:0"><div class="big">${s.h} de ${s.t}</div><div class="kv"><span>Faltan <b>${s.t-s.h}</b></span><span>Normales <b>${s.nh}/${s.nt}</b></span><span>Especiales <b>${s.sh}/${s.st}</b></span><span>Repetidas <b>${s.rep}</b></span>${used.length?`<span>Meta <b>${GOALS[g]}</b></span>`:''}</div></div></div>
   <div class="tabs" role="tablist">${[['album','Álbum'],['miss','Faltantes'],['rep','Repetidas']].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div>
-  <div class="tools"><input type="search" id="q" placeholder="Buscar número o nombre" value="${esc(q)}"></div>
+  <div class="tools"><input type="search" id="q" placeholder="Buscar número o nombre" value="${esc(q)}">${tab==='rep'?`<div class="mode"><button aria-pressed="${repView==='all'}" data-a="repview" data-k="all">Agregar</button><button aria-pressed="${repView!=='all'}" data-a="repview" data-k="only">Solo mis repetidas</button></div>`:''}</div>
   ${tab==='album'&&used.length>1?`<div class="actbar"><span class="lbl">Marcar en</span>${used.map(id=>{const v=varOf(c,id);return `<button class="actv" data-a="actv" data-id="${id}" aria-pressed="${id===act}" style="${esc(vStyle(v))}"><i class="sw v-${v.effect} ${txCls(c,v)}"></i>${esc(v.name)}</button>`}).join('')}</div>`:''}
-  ${c.locked?`<div class="lockbar">${IC.lock.replace('<svg','<svg width="18" height="18"')}<span style="flex:1">Bloqueado: los toques no cambian nada</span><button class="btn sm" data-a="lock">Desbloquear</button></div>`:''}<p class="hint">${tab==='rep'?'Toca una repetida cuando la entregues (resta 1). Con 4 o más se abre el contador.':tab==='miss'?'Toca una faltante cuando la consigas.':used.length?'Toca para sumar (en las secciones con varias variantes, suma en la variante elegida arriba). Mantén presionado para quitar una o ver todas sus variantes.':'Toca para sumar una. Mantén presionado para quitar una. Con 4 o más se abre el contador.'}</p>`;
+  ${c.locked?`<div class="lockbar">${IC.lock.replace('<svg','<svg width="18" height="18"')}<span style="flex:1">Bloqueado: los toques no cambian nada</span><button class="btn sm" data-a="lock">Desbloquear</button></div>`:''}<p class="hint">${tab==='rep'?(repView==='all'?'Toca para sumar una repetida, mantén presionado para quitar una. Aquí puedes cargar repetidas de cualquier sección o variante, aunque no la colecciones. Las tenues son las que te faltan.':'Mantén presionado para quitar una repetida cuando la entregues. Con 4 o más se abre el contador.'):tab==='miss'?'Toca una faltante cuando la consigas.':used.length?'Toca para marcar o desmarcar que la tienes, en la variante elegida arriba. Mantén presionado para ver todas sus variantes. Las repetidas se cargan en la pestaña Repetidas.':'Toca para marcar o desmarcar que la tienes. Las repetidas se cargan en la pestaña Repetidas.'}</p>`;
   const qq=q.trim().toUpperCase();let any=false;
   for(const sec of c.sections){if(!sec.showApp)continue;const multi=isMulti(sec);
     const all=items(sec);let list=all;if(qq)list=list.filter(it=>it.app.toUpperCase().includes(qq)||it.share.toUpperCase().includes(qq)||it.code.toUpperCase()===qq);
     let U=0,H=0;const st=new Map();all.forEach(it=>{const x=itemState(c,sec,it);st.set(it,x);U+=x.units;H+=x.have});
     const wide=sec.kind==='labels'?'wide':'';const grid=t=>`<div class="grid ${wide}">${t}</div>`;let body='',cnt='';
-    if(tab==='album'){if(!list.length)continue;body=grid(list.map(it=>multi?mtileHTML(c,sec,it):tileHTML(c,sec,it)).join(''));cnt=H+' / '+U}
+    if(tab==='album'){if(!list.length||!U)continue;body=grid(list.map(it=>multi?mtileHTML(c,sec,it):tileHTML(c,sec,it)).join(''));cnt=H+' / '+U}
     else if(tab==='miss'){
       const g=secGoal(c,sec);if(g==='any'||!multi){const l=list.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0});if(!l.length)continue;
         body=grid(l.map(it=>multi?mtileHTML(c,sec,it):slotTileHTML(c,sec,it,st.get(it).sl[0],0,0)).join(''));cnt=l.length+' faltan'}
       else{let n=0;secVars(c,sec).forEach(vid=>{const l=list.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid));if(!l.length)return;n+=l.length;
           body+=vsubHTML(c,vid,l.length)+grid(l.map(it=>slotTileHTML(c,sec,it,st.get(it).missSlots.find(m=>m.vid===vid),0,0)).join(''))});if(!n)continue;cnt=n+' faltan'}}
-    else{let n=0;const vids=multi?secVars(c,sec):[null];
-      vids.forEach(vid=>{const l=[];list.forEach(it=>{const z=st.get(it).extras.find(z=>multi?z.vid===vid:true);if(z)l.push([it,z])});if(!l.length)return;n+=l.reduce((a,[,z])=>a+z.e,0);
-        body+=(multi?vsubHTML(c,vid,l.length):'')+grid(l.map(([it,z])=>slotTileHTML(c,sec,it,z,z.n,z.n)).join(''))});if(!n)continue;cnt=n+' rep.'}
+    else{let n=0,shown=0;const vids=multi?secVars(c,sec):[null];
+      vids.forEach(vid=>{const l=[];list.forEach(it=>{const x=st.get(it);const z=x.sl.find(z=>multi?z.vid===vid:true);if(!z)return;const base=slotBase(c,z.k);const e=base===null?0:z.n-base;if(repView!=='all'&&e<=0)return;l.push([it,z,e,base===null])});if(!l.length)return;
+        const e=l.reduce((a,[,,e])=>a+e,0);n+=e;shown+=l.length;
+        body+=(multi?vsubHTML(c,vid,e)+(inGoalSec(c,sec,vid)?'':'<span class="vchip meta" style="margin:-2px 0 6px;display:inline-flex">Fuera de tu meta</span>'):'')+grid(l.map(([it,z,e,na])=>repTileHTML(c,sec,it,z,e,na)).join(''))});if(!shown)continue;cnt=n+' rep.'}
     any=true;const v=varOf(c,multi?secVars(c,sec)[0]:sec.variant);
     h+=`<section class="sec ${sec.gapApp?'gap':''}" style="--vc:${esc(v.color)}"><div class="sechead"><div style="flex:1;min-width:0"><h4>${esc(sec.name)} ${esc(sec.emoji)}</h4>${chips(c,sec)}</div><span class="c">${cnt}</span></div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${body}</section>`}
   if(!any)h+=`<div class="empty">${tab==='rep'?'Todavía no tienes repetidas.':tab==='miss'?'¡No te falta ninguna!':'No hay figuritas que coincidan.'}</div>`;
@@ -559,7 +572,7 @@ function editHTML(){const c=col();const sh=c.share;
     <label class="chk"><input type="checkbox" id="s${i}-ga" ${p} data-f="gapApp" ${s.gapApp?'checked':''}><span>Separación antes de esta sección en la app</span></label>
     <label class="chk"><input type="checkbox" id="s${i}-bs" ${p} data-f="breakShare" ${s.breakShare?'checked':''}><span>Línea en blanco después de esta sección al compartir</span></label>
     <span class="lbl">Figuritas al compartir</span><div class="seg" style="margin-top:6px">${[['inline','Seguidas con separador'],['lines','Una por línea']].map(([k,l])=>`<button aria-pressed="${layoutOf(s)===k}" data-a="layout" data-i="${i}" data-k="${k}">${l}</button>`).join('')}</div></div>
-    <div class="acts" style="margin-top:6px"><button class="btn" data-a="dupsec" data-i="${i}">Duplicar sección</button>${delBtn('delsec',i,'Eliminar sección')}</div></div>`});
+    <div class="acts" style="margin-top:6px"><button class="btn" data-a="dupsec" data-i="${i}">Duplicar sección</button>${isMulti(s)?'':`<button class="btn" data-a="secsplit" data-i="${i}">Copias por variante</button>`}${delBtn('delsec',i,'Eliminar sección')}</div></div>`});
   }
   if(etab==='share'){h+=`<div class="card"><h3 style="margin-bottom:10px">Texto al compartir</h3>
   <div class="f"><label for="sh-t">Encabezado · usa {nombre} y {editorial}</label><input id="sh-t" data-sh="title" value="${esc(sh.title)}"></div>
@@ -795,10 +808,10 @@ function closeSheet(){if(typeof stopCam==='function')stopCam();document.getEleme
 let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2200)}
 async function copy(text,el){try{await navigator.clipboard.writeText(text);toast('Copiado')}catch(e){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Texto seleccionado: cópialo con el menú')}}
 
-const QTY_MIN=4;let qtyKey=null,qtyVal=0,qtyLabel='';
+const QTY_MIN=4;let qtyKey=null,qtyVal=0,qtyLabel='',qtyBase=0;
 function findItem(c,k){k=itemKeyOf(k);const i=k.indexOf('|');const sec=c.sections.find(s=>s.id===k.slice(0,i));const code=k.slice(i+1);const it=sec&&items(sec).find(x=>x.code===code);return {sec,it}}
-const qtySub=n=>n===0?'No la tienes':n===1?'1 copia (sin repetidas)':`${n} copias (${n-1} repetida${n-1>1?'s':''})`;
-function openQty(k){const c=col();const {sec,it}=findItem(c,k);qtyKey=k;qtyVal=c.counts[k]||0;const sv=vidOfSlot(k);const v=varOf(c,sv||(it&&it.special?(sec.specialVariant||sec.variant):sec?.variant));
+const qtySub=n=>n===0?'Sin repetidas':n===1?'1 repetida':`${n} repetidas`;
+function openQty(k){const c=col();const {sec,it}=findItem(c,k);qtyKey=k;qtyBase=Math.max(0,slotBase(c,k)||0);qtyVal=(c.counts[k]||0)-qtyBase;const sv=vidOfSlot(k);const v=varOf(c,sv||(it&&it.special?(sec.specialVariant||sec.variant):sec?.variant));
   qtyLabel=(it?(sec.kind==='num'?'Figurita '+it.share:it.share):k)+(sv?' · '+v.name:'');
   sheet(`<div class="qty"><div class="qprev">${vPreview(c,v,it?it.app:'')}</div><h2>${esc(qtyLabel)}</h2><p class="muted" id="qsub">${qtySub(qtyVal)}</p>
   <div class="qrow"><button class="qb" data-a="qminus" aria-label="Quitar una">−</button><output id="qval" aria-live="polite">${qtyVal}</output><button class="qb" data-a="qplus" aria-label="Agregar una">+</button></div>
@@ -813,9 +826,11 @@ document.addEventListener('click',e=>{
   const mt=e.target.closest('.tile[data-mk]');
   if(mt&&view==='album'){if(lpFired){lpFired=false;return}const c0=col();if(c0.locked){toast('Álbum bloqueado: toca el candado para marcar');return}
     const ik=mt.dataset.mk;const {sec}=findItem(c0,ik);const {act}=activeVar(c0);
-    if(sec&&act&&secVars(c0,sec).includes(act)){const sk=ik+'@'+act;if((c0.counts[sk]||0)>=QTY_MIN){openMulti(ik);return}bump(sk,1)}else openMulti(ik);return}
+    if(sec&&act&&secVars(c0,sec).includes(act)&&inGoalSec(c0,sec,act)){const sk=ik+'@'+act;const n=c0.counts[sk]||0;if(n===0)bump(sk,1);else if(n===1){if(tab==='album')bump(sk,-1)}else toast('Tiene '+(n-1)+(n>2?' repetidas':' repetida')+'. Quítalas en la pestaña Repetidas.')}else openMulti(ik);return}
   const t=e.target.closest('.tile[data-k]');
-  if(t&&view==='album'){if(lpFired){lpFired=false;return}if(col().locked){toast('Álbum bloqueado: toca el candado para marcar');return}const k=t.dataset.k;if((col().counts[k]||0)>=QTY_MIN){openQty(k);return}bump(k,tab==='rep'?-1:1);return}
+  if(t&&view==='album'){if(lpFired){lpFired=false;return}const c0=col();if(c0.locked){toast('Álbum bloqueado: toca el candado para marcar');return}const k=t.dataset.k;const n=c0.counts[k]||0;
+    if(tab!=='rep'){if(n===0)bump(k,1);else if(n===1){if(tab==='album')bump(k,-1)}else toast('Tiene '+(n-1)+(n>2?' repetidas':' repetida')+'. Quítalas en la pestaña Repetidas.');return}
+    const base=slotBase(c0,k);if(base===null){toast('Te falta esta. Márcala primero en Álbum.');return}if(n-base>=QTY_MIN){openQty(k);return}bump(k,1);return}
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,c=col(),i=+b.dataset.i;
   switch(a){
    case 'home':view='home';cur=null;render();scrollTo(0,0);break;
@@ -829,7 +844,7 @@ document.addEventListener('click',e=>{
    case 'ttoggle':openTx=openTx===b.dataset.id?null:b.dataset.id;armed=null;{const y=scrollY;render();scrollTo(0,y)}break;
    case 'tab':tab=b.dataset.t;render();break;
    case 'qminus':case 'qplus':{qtyVal=Math.max(0,Math.min(999,qtyVal+(a==='qplus'?1:-1)));updQty();break}
-   case 'qok':{const c2=col();if(qtyVal)c2.counts[qtyKey]=qtyVal;else delete c2.counts[qtyKey];save();closeSheet();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
+   case 'qok':{const c2=col();const tot=qtyVal+qtyBase;if(tot)c2.counts[qtyKey]=tot;else delete c2.counts[qtyKey];save();closeSheet();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
    case 'share':openShare();break;
    case 'sho':shOpt[b.dataset.k]=!shOpt[b.dataset.k];openShare();break;
    case 'copy':copy(document.getElementById('shtxt').textContent,document.getElementById('shtxt'));break;
@@ -851,6 +866,10 @@ document.addEventListener('click',e=>{
    case 'repcount':c.share.repCount=b.checked;save();openShare();break;
    case 'kind':c.sections[i].kind=b.dataset.k;save();render();break;
    case 'az':c.sections[i].letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').join(',');save();render();break;
+   case 'secsplit':openSplit(i);break;
+   case 'dosplit':{const base=c.sections[i];const ids=[...document.querySelectorAll('[data-splitv]')].filter(x=>x.checked).map(x=>x.dataset.splitv);if(!ids.length){toast('Marca al menos una variante');break}
+     const bn=base.name.replace(/\s*\([^)]*\)\s*$/,'');const add=ids.map(id=>{const n=JSON.parse(JSON.stringify(base));n.id=uid();n.name=bn+' ('+varOf(c,id).name+')';n.variant=id;n.specialVariant=null;n.vars=null;return n});
+     c.sections.splice(i+1,0,...add);closeSheet();{const y=scrollY;render();scrollTo(0,y)}toast(add.length+(add.length>1?' secciones creadas':' sección creada')+'. Revisa los nombres y toca Guardar.');break}
    case 'dupsec':{const n=JSON.parse(JSON.stringify(c.sections[i]));n.id=uid();n.name=n.name+' (copia)';c.sections.splice(i+1,0,n);save();render();
      const inp=document.getElementById('s'+(i+1)+'-n');if(inp){inp.closest('.card').scrollIntoView({block:'start',behavior:'smooth'});inp.focus({preventScroll:true});inp.select()}toast('Sección duplicada: cámbiale el nombre y la variante');break}
    case 'lock':c.locked=!c.locked;save();{const y=scrollY;render();scrollTo(0,y)}toast(c.locked?'Álbum bloqueado':'Álbum desbloqueado');break;
@@ -888,6 +907,8 @@ document.addEventListener('click',e=>{
    case 'treg':if(!b.dataset.ok){tradeDel=true;const y=scrollY;render();scrollTo(0,y);break}{const c1=col();let g=0,d=0;tradeSel.get.forEach(k=>{c1.counts[k]=(c1.counts[k]||0)+1;g++});tradeSel.give.forEach(k=>{if((c1.counts[k]||0)>0){c1.counts[k]--;if(!c1.counts[k])delete c1.counts[k];d++}});save();trade=null;view='album';render();scrollTo(0,0);toast(`Intercambio registrado: +${g} recibidas, −${d} entregadas`);break}
    case 'treset':trade=null;render();scrollTo(0,0);break;
    case 'actv':{const c1=col();c1.activeVar=b.dataset.id;save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
+   case 'mqt':{const k=b.dataset.k;if((mq.vals[k]||0)>1)break;mq.vals[k]=mq.vals[k]?0:1;b.classList.toggle('pri',!!mq.vals[k]);b.setAttribute('aria-pressed',!!mq.vals[k]);b.textContent=mq.vals[k]?'La tengo ✓':'No la tengo';break}
+   case 'repview':repView=b.dataset.k;{const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y)}break;
    case 'mqm':case 'mqp':{const k=b.dataset.k;mq.vals[k]=Math.max(0,Math.min(999,(mq.vals[k]||0)+(a==='mqp'?1:-1)));const o=document.getElementById('mq-'+vidOfSlot(k));if(o)o.textContent=mq.vals[k];break}
    case 'mqok':{const c1=col();Object.entries(mq.vals).forEach(([k,n])=>{if(n)c1.counts[k]=n;else delete c1.counts[k]});save();closeSheet();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
    case 'secmulti':{const sx=c.sections[i];const on=b.dataset.k==='1';
@@ -935,8 +956,8 @@ document.addEventListener('input',()=>{if(view==='edit')updSaveBar()});
 document.addEventListener('click',()=>{if(view==='edit')setTimeout(updSaveBar)});
 document.addEventListener('change',e=>{if(e.target.id==='qrimg'){const f=e.target.files[0];if(f)scanFile(f);return}if(e.target.id==='impf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById('imp').value=r.result;toast('Archivo cargado. Revisa y pulsa importar.')};r.readAsText(f)}});
 let lp=null,lpFired=false;
-document.addEventListener('pointerdown',e=>{const mt=e.target.closest('.tile[data-mk]');if(mt&&view==='album'&&!col().locked){lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}openMulti(mt.dataset.mk)},480);return}const t=e.target.closest('.tile[data-k]');if(!t||view!=='album'||tab!=='album'||col().locked)return;lpFired=false;clearTimeout(lp);
-  lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}const k=t.dataset.k;if((col().counts[k]||0)>=QTY_MIN)openQty(k);else bump(k,-1)},480)});
+document.addEventListener('pointerdown',e=>{const mt=e.target.closest('.tile[data-mk]');if(mt&&view==='album'&&!col().locked){lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}openMulti(mt.dataset.mk)},480);return}const t=e.target.closest('.tile[data-k]');if(!t||view!=='album'||tab!=='rep'||col().locked)return;lpFired=false;clearTimeout(lp);
+  lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}const k=t.dataset.k;const c0=col();const base=slotBase(c0,k);const n=c0.counts[k]||0;if(base===null||n-base<=0)return;if(n-base>=QTY_MIN)openQty(k);else bump(k,-1)},480)});
 ['pointerup','pointercancel','scroll'].forEach(ev=>document.addEventListener(ev,()=>clearTimeout(lp),true));
 document.addEventListener('contextmenu',e=>{if(e.target.closest('.tile'))e.preventDefault()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if((e.key==='Enter'||e.key===' ')&&e.target.classList?.contains('colcard')){e.preventDefault();e.target.click()}});
