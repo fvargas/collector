@@ -1,6 +1,6 @@
 // Funciona sin internet: guarda la app y las fuentes la primera vez que se abre.
 // Cuando cambies index.html, sube el número de VERSION para que los celulares descarguen la nueva.
-const VERSION = 'figuritas-v3';
+const VERSION = 'figuritas-v4';
 const APP = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -26,8 +26,8 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Fuentes de Google y archivos propios: primero la copia guardada.
-  if (url.origin === location.origin || url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com')) {
+  // Fuentes de Google, lectores de QR y archivos propios: primero la copia guardada.
+  if (url.origin === location.origin || url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com') || url.hostname==='cdn.jsdelivr.net') {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
       if (r.ok || r.type === 'opaque') { const copy = r.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
       return r;

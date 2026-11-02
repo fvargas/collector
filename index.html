@@ -18,6 +18,8 @@
 <script>window.IS_PWA=true</script>
 </head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" async></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
@@ -216,6 +218,20 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .grow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:9px 11px}
 .grow .gcount{font:600 13px var(--f-mono);min-width:18px;text-align:right}
 .dngi{color:var(--danger)}
+.thero{text-align:center;padding:8px 0 4px}.thero p{max-width:34em;margin:8px auto 0}
+.ticon{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:color-mix(in oklab,var(--accent) 20%,var(--surface));color:var(--accent)}.ticon svg{width:34px;height:34px}
+.tstats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0 8px}
+.tchip{border-radius:10px;padding:9px 14px;font-weight:600;border:1px solid var(--line);background:var(--surface)}
+.tchip.miss b{color:var(--danger)}.tchip.rep b{color:var(--accent)}
+.tmenu{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+.tblock{margin:16px 0}
+.tsec{margin:8px 0 12px}.tsech{font-weight:600;font-size:14px;margin-bottom:6px;display:flex;gap:8px}.tsech .muted{font:600 12px var(--f-mono);align-self:center}
+.tile.off{opacity:.3;filter:grayscale(1)}
+.tile[data-tk]{cursor:pointer}
+.qrbox{display:flex;justify-content:center}.qrsvg{width:min(78vw,320px);height:auto;border-radius:12px;display:block}
+.camwrap{position:relative;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:1;max-width:360px;margin:0 auto}
+.camwrap video{width:100%;height:100%;object-fit:cover;display:block}
+.camframe{position:absolute;inset:18%;border:3px solid var(--accent);border-radius:16px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -235,6 +251,7 @@ const IC={
  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3" fill="currentColor"/></svg>',
  unlock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 7.6-1.7"/></svg>',
  more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
+ trade:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/></svg>',
  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
 };
 const EFFECTS={solid:'Sólido',metal:'Metalizado',glass:'Translúcido',holo:'Holográfico',iris:'Tornasol',outline:'Contorno'};
@@ -343,11 +360,12 @@ function stats(c){let t=0,h=0,nt=0,nh=0,st=0,sh=0,rep=0;for(const s of c.section
 /* ---------- Render ---------- */
 function bar(){const b=document.getElementById('bar');const c=col();
   if(view==='home')b.innerHTML=`<h1>Mis colecciones</h1><button class="ib" data-a="io-all" aria-label="Importar o exportar">${IC.io}</button>`;
-  else if(view==='album')b.innerHTML=`<button class="ib" data-a="home" aria-label="Volver">${IC.back}</button><h1>${esc(c.name)}</h1><button class="ib ${c.locked?'locked':''}" data-a="lock" aria-pressed="${!!c.locked}" aria-label="${c.locked?'Desbloquear álbum':'Bloquear álbum'}">${c.locked?IC.lock:IC.unlock}</button><button class="ib" data-a="share" aria-label="Compartir">${IC.share}</button><button class="ib" data-a="edit" aria-label="Configurar">${IC.gear}</button>`;
+  else if(view==='album')b.innerHTML=`<button class="ib" data-a="home" aria-label="Volver">${IC.back}</button><h1>${esc(c.name)}</h1><button class="ib ${c.locked?'locked':''}" data-a="lock" aria-pressed="${!!c.locked}" aria-label="${c.locked?'Desbloquear álbum':'Bloquear álbum'}">${c.locked?IC.lock:IC.unlock}</button><button class="ib" data-a="share" aria-label="Compartir">${IC.share}</button><button class="ib" data-a="trade" aria-label="Intercambiar">${IC.trade}</button><button class="ib" data-a="edit" aria-label="Configurar">${IC.gear}</button>`;
+  else if(view==='trade')b.innerHTML=`<button class="ib" data-a="tback" aria-label="Volver al álbum">${IC.back}</button><h1>Intercambiar</h1>`;
   else b.innerHTML=`<button class="ib" data-a="album" aria-label="Volver al álbum">${IC.back}</button><h1>Configurar álbum</h1><button class="ib" data-a="io" aria-label="JSON">${IC.io}</button>`;
 }
 function render(){bar();setTimeout(updSaveBar);const m=document.getElementById('main');m.classList.toggle('is-locked',view==='album'&&!!col()?.locked);
-  if(view==='home')m.innerHTML=homeHTML();else if(view==='album')m.innerHTML=albumHTML();else m.innerHTML=editHTML();}
+  if(view==='home')m.innerHTML=homeHTML();else if(view==='album')m.innerHTML=albumHTML();else if(view==='trade')m.innerHTML=tradeHTML();else m.innerHTML=editHTML();}
 
 let reorder=false;
 function sortedIn(list){if(S.sort==='manual')return list;const k=S.sort==='za'?-1:1;return [...list].sort((a,b)=>k*a.name.localeCompare(b.name,'es',{numeric:true,sensitivity:'base'}))}
@@ -473,6 +491,105 @@ function editHTML(){const c=col();const sh=c.share;
 let armed=null;
 function delBtn(a,i,l){const id=a+i;return armed===id?`<button class="btn dng" data-a="${a}" data-i="${i}" data-ok="1">Toca otra vez para confirmar</button><button class="btn" data-a="disarm">Cancelar</button>`:`<button class="btn dng" data-a="arm" data-id="${id}">${l}</button>`}
 
+/* ---------- Intercambio ---------- */
+let trade=null,tradeSel=null,tradeDel=false,camStream=null,camRaf=0;
+const normTxt=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^\p{L}\p{N}#]+/gu,' ').replace(/\s+/g,' ').trim();
+const safeNm=s=>clean(s).replace(/[|~]/g,' ');
+function numRanges(a){const o=[];let i=0;while(i<a.length){let j=i;while(j+1<a.length&&a[j+1]===a[j]+1)j++;o.push(j>i?a[i]+'-'+a[j]:String(a[i]));i=j+1}return o.join(',')}
+function parseNums(str){const out=[];String(str||'').split(',').filter(Boolean).forEach(t=>{const m=/^(\d+)-(\d+)$/.exec(t);if(m){for(let n=+m[1];n<=+m[2]&&out.length<20000;n++)out.push(n)}else if(/^\d+$/.test(t))out.push(+t)});return out}
+function myLists(c){const miss=new Set(),rep=new Set();for(const s of c.sections)for(const it of items(s)){const k=key(s,it),n=c.counts[k]||0;if(!n)miss.add(k);else if(n>1)rep.add(k)}return {miss,rep}}
+function encodeTrade(c){return 'FIG1|'+safeNm(c.name)+'|'+c.sections.map(s=>{const miss=[],rep=[];items(s).forEach(it=>{const n=c.counts[key(s,it)]||0;if(!n)miss.push(it.num);else if(n>1)rep.push(it.num)});return safeNm(s.name)+'~'+numRanges(miss)+'~'+numRanges(rep)}).join('|')}
+function secByName(c,name){const n=normTxt(name);if(!n)return null;
+  return c.sections.find(s=>normTxt(s.name)===n)||c.sections.find(s=>normTxt(s.shareName)===n)||null}
+function decodeTrade(str,c){const parts=str.trim().split('|');const res={miss:new Set(),rep:new Set(),unknown:[],album:parts[1]||'',fromCode:true};
+  parts.slice(2).forEach((p,idx)=>{const [nm,m,r]=p.split('~');let s=secByName(c,nm);if(!s&&c.sections[idx]&&!secByName(c,nm))s=null;
+    if(!s){res.unknown.push('Sección «'+nm+'»');return}const byNum=new Map(items(s).map(it=>[it.num,key(s,it)]));
+    parseNums(m).forEach(n=>{const k=byNum.get(n);if(k)res.miss.add(k)});parseNums(r).forEach(n=>{const k=byNum.get(n);if(k)res.rep.add(k)})});
+  return res}
+function parseTradeText(text,c){const res={miss:new Set(),rep:new Set(),unknown:[],album:'',fromCode:false};let mode=null,cur=null,heads=0;
+  const matchHead=h=>secByName(c,h)||secByName(c,h.replace(/\([^)]*\)\s*$/,''));
+  const addItems=(str)=>{const its=items(cur);const set=mode==='miss'?res.miss:res.rep;
+    const toks=cur.kind==='labels'&&its.some(it=>normTxt(it.share)===normTxt(str.replace(/\(x\d+\)\s*$/i,'')))?[str]:str.split(/\s*[,;]\s*/);
+    toks.forEach(t0=>{const t=t0.replace(/\(\s*x\s*\d+\s*\)/i,'').replace(/\s+x\d+$/i,'').trim();if(!t)return;
+      const rg=/^([A-Za-z#]*)\s*(\d+)\s*[-–]\s*([A-Za-z#]*)\s*(\d+)$/.exec(t);
+      if(rg&&(cur.kind==='num'||cur.kind==='code')){for(let n=+rg[2];n<=+rg[4];n++){const it=its.find(x=>x.num===n);if(it)set.add(key(cur,it))}return}
+      const nt=normTxt(t),ut=t.toUpperCase();
+      const it=its.find(x=>x.code.toUpperCase()===ut||normTxt(x.share)===nt||normTxt(x.app)===nt||((cur.kind==='labels'||cur.kind==='letters')&&String(x.num)===t.replace(/\)$/,'')));
+      if(it)set.add(key(cur,it));else res.unknown.push(t)})};
+  for(const raw of String(text).split(/\r?\n/)){const line=raw.trim();if(!line){cur=null;continue}const low=normTxt(line);
+    if(/\bfaltan/.test(low)&&/:\s*$/.test(line)){mode='miss';cur=null;heads++;continue}
+    if(/\brepetid/.test(low)&&/:\s*$/.test(line)){mode='rep';cur=null;heads++;continue}
+    const ci=line.indexOf(':');if(ci>0){const s=matchHead(line.slice(0,ci));if(s){cur=s;const rest=line.slice(ci+1).trim();if(rest&&mode)addItems(rest);continue}}
+    if(cur&&mode)addItems(line)}
+  if(!heads)res.noHeads=true;return res}
+function loadFriend(str){const c=col();str=String(str||'').trim();if(!str){toast('Pega la lista o el código de tu amigo');return}
+  const res=str.startsWith('FIG1|')?decodeTrade(str,c):parseTradeText(str,c);
+  if(!res.miss.size&&!res.rep.size){toast(res.noHeads?'No encontré "Faltantes" ni "Repetidas" en el texto':'No reconocí figuritas de esta colección');return}
+  const me=myLists(c);res.get=[...res.rep].filter(k=>me.miss.has(k));res.give=[...me.rep].filter(k=>res.miss.has(k));
+  trade=res;tradeSel={get:new Set(res.get),give:new Set(res.give)};tradeDel=false;stopCam();closeSheet();render();scrollTo(0,0)}
+function groupKeys(c,keys){const by=new Map();keys.forEach(k=>{const {sec,it}=findItem(c,k);if(!sec||!it)return;if(!by.has(sec))by.set(sec,[]);by.get(sec).push(it)});
+  return c.sections.filter(s=>by.has(s)).map(s=>[s,by.get(s).sort((a,b)=>a.num-b.num)])}
+function tradeTiles(c,keys,side){const sel=tradeSel[side];return groupKeys(c,keys).map(([s,its])=>`<div class="tsec"><div class="tsech">${esc(s.name)} ${esc(s.emoji)}<span class="muted">${its.length}</span></div><div class="grid ${s.kind==='labels'?'wide':''}">${its.map(it=>{const k=key(s,it);const v=varOf(c,it.special?(s.specialVariant||s.variant):s.variant);
+  return `<button class="tile has v-${v.effect} ${txCls(c,v)} ${sel.has(k)?'':'off'}" style="${esc(vStyle(v))}" data-a="tsel" data-side="${side}" data-tk="${esc(k)}" aria-pressed="${sel.has(k)}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span></button>`}).join('')}</div></div>`).join('')}
+function tradeHTML(){const c=col();const me=myLists(c);
+  if(!trade)return `<div class="thero"><div class="ticon">${IC.trade}</div><h2>Intercambiar figuritas</h2><p class="muted">Compara tu ${esc(c.name)} con el de un amigo que tenga la misma configuración y mira qué se pueden dar.</p></div>
+    <div class="tstats"><span class="tchip miss"><b>${me.miss.size}</b> faltantes</span><span class="tchip rep"><b>${me.rep.size}</b> con repetidas</span></div>
+    <div class="menu tmenu">
+     <button data-a="tqr"><span class="mi">▦</span><span><b>Mostrar mi código QR</b><small>Tu amigo lo escanea desde su app</small></span></button>
+     <button data-a="tscan"><span class="mi">◎</span><span><b>Escanear código de un amigo</b><small>${window.IS_PWA?'Con la cámara o con una foto del QR':'Toma una foto del QR de tu amigo'}</small></span></button>
+     <button data-a="tpaste"><span class="mi">¶</span><span><b>Pegar lista o código</b><small>La lista que te mandó por WhatsApp, o su código de intercambio</small></span></button>
+    </div>
+    <p class="muted" style="font-size:12.5px;margin-top:14px">Para que coincidan, tu amigo debe tener la misma configuración. Pásasela desde ⋮ → Exportar configuración (sin tus figuritas marcadas).</p>`;
+  const g=tradeSel.get.size,d=tradeSel.give.size;
+  let h=`${trade.fromCode&&trade.album&&normTxt(trade.album)!==normTxt(c.name)?`<div class="lockbar">El código es de «${esc(trade.album)}». Se comparó por nombre de sección.</div>`:''}
+    <div class="sum tsum"><div><div class="big">${g} ↔ ${d}</div><div class="kv"><span>Te puede dar <b>${trade.get.length}</b></span><span>Le puedes dar <b>${trade.give.length}</b></span><span>Cambio parejo <b>${Math.min(trade.get.length,trade.give.length)}</b></span></div></div></div>
+    ${trade.unknown.length?`<p class="hint">No reconocí ${trade.unknown.length}: ${esc(trade.unknown.slice(0,8).join(', '))}${trade.unknown.length>8?'…':''}</p>`:''}
+    <p class="hint">Toca una figurita para sacarla o volverla a incluir en el intercambio.</p>
+    <div class="tblock"><div class="sechd"><h4 style="flex:1;margin:0;font:700 17px var(--f-display)">Te puede dar <span class="muted">(${g}/${trade.get.length})</span></h4><button class="btn sm" data-a="tall" data-side="get">${g===trade.get.length?'Ninguna':'Todas'}</button></div>
+    ${trade.get.length?tradeTiles(c,trade.get,'get'):'<div class="empty">Tu amigo no tiene repetidas que te falten.</div>'}</div>
+    <div class="tblock"><div class="sechd"><h4 style="flex:1;margin:0;font:700 17px var(--f-display)">Le puedes dar <span class="muted">(${d}/${trade.give.length})</span></h4><button class="btn sm" data-a="tall" data-side="give">${d===trade.give.length?'Ninguna':'Todas'}</button></div>
+    ${trade.give.length?tradeTiles(c,trade.give,'give'):'<div class="empty">No tienes repetidas que le falten.</div>'}</div>
+    <div class="acts" style="margin-top:6px"><button class="btn pri" data-a="tcopy">Copiar propuesta</button>${tradeDel?`<button class="btn dng" data-a="treg" data-ok="1">Confirmar: +${g} recibidas, −${d} entregadas</button>`:`<button class="btn" data-a="treg" ${g+d?'':'disabled'}>Registrar intercambio</button>`}<button class="btn" data-a="treset">Nueva comparación</button></div>`;
+  return h}
+function tradeText(c){const sec=(keys)=>groupKeys(c,keys).map(([s,its])=>(s.shareName||s.name)+(s.emoji?' '+s.emoji:'')+': '+its.map(it=>it.share).join(', ')).join('\n');
+  const gv=[...tradeSel.give],gt=[...tradeSel.get];
+  return `🔄 Intercambio · ${c.name}\n\nTe doy (${gv.length}):\n${sec(gv)||'—'}\n\nMe das (${gt.length}):\n${sec(gt)||'—'}`}
+function qrSVG(text){if(typeof qrcode!=='function')throw new Error('nolib');
+  if(qrcode.stringToBytesFuncs&&qrcode.stringToBytesFuncs['UTF-8'])qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8'];
+  const q=qrcode(0,'L');q.addData(text,'Byte');q.make();const n=q.getModuleCount(),m=4;let d='';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))d+=`M${k+m} ${r+m}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${n+2*m} ${n+2*m}" class="qrsvg" role="img" aria-label="Código QR de intercambio" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`}
+function openMyQR(){const c=col();const code=encodeTrade(c);let qr='';
+  try{qr=qrSVG(code)}catch(e){qr=`<div class="empty">${e.message==='nolib'?'No se pudo cargar el generador de QR. Conéctate a internet una vez y vuelve a intentar.':'Tu lista es muy larga para un QR. Usa "Copiar código" y mándalo por WhatsApp.'}</div>`}
+  sheet(`<div class="sechd"><h2 style="flex:1">Mi código</h2><button class="btn sm" data-a="close">Cerrar</button></div>
+  <p class="muted" style="font-size:13px;margin:2px 0 10px">${esc(c.name)} · tu amigo lo escanea desde Intercambiar → Escanear.</p>
+  <div class="qrbox">${qr}</div><pre id="tcode" style="font-family:var(--f-mono);font-size:11px;max-height:90px">${esc(code)}</pre>
+  <div class="acts"><button class="btn" data-a="tcodecopy">Copiar código</button>${navigator.share&&window.IS_PWA?'<button class="btn" data-a="tcodeshare">Enviar…</button>':''}</div>`)}
+function openScan(){sheet(`<div class="sechd"><h2 style="flex:1">Escanear QR</h2><button class="btn sm" data-a="close">Cerrar</button></div>
+  ${window.IS_PWA&&navigator.mediaDevices?`<div class="camwrap" id="camwrap" hidden><video id="camv" playsinline muted></video><div class="camframe"></div></div><div class="acts" style="margin:10px 0"><button class="btn pri" data-a="tcam">Usar la cámara</button></div>`:''}
+  <p class="muted" style="font-size:13px;margin:8px 0">${window.IS_PWA?'O toma':'Toma'} una foto del QR de tu amigo, bien de cerca y nítida.</p>
+  <div class="acts"><label class="btn ${window.IS_PWA?'':'pri'}" for="qrimg">Tomar o elegir foto</label><input type="file" id="qrimg" accept="image/*" capture="environment" hidden></div>
+  <p class="muted" id="scanmsg" style="font-size:12.5px;margin-top:10px"></p>`)}
+function openPaste(){sheet(`<div class="sechd"><h2 style="flex:1">Pegar lista o código</h2><button class="btn sm" data-a="close">Cerrar</button></div>
+  <p class="muted" style="font-size:13px;margin:2px 0 8px">Pega la lista de faltantes y repetidas que te mandó tu amigo, o su código (empieza con FIG1).</p>
+  <div class="f"><textarea id="tpastev" placeholder="❌ Faltantes (120):&#10;Lista Básicas:&#10;1, 2, 5…&#10;&#10;🔁 Repetidas (30):&#10;…"></textarea></div><button class="btn pri" data-a="tpastego">Comparar</button>`)}
+function decodeImageData(id){if(typeof jsQR!=='function')throw new Error('nolib');const r=jsQR(id.data,id.width,id.height,{inversionAttempts:'attemptBoth'});if(!r)return null;
+  try{return r.binaryData&&r.binaryData.length?new TextDecoder('utf-8').decode(new Uint8Array(r.binaryData)):r.data}catch(e){return r.data}}
+function scanFile(f){const msg=document.getElementById('scanmsg');if(msg)msg.textContent='Leyendo la foto…';const url=URL.createObjectURL(f);const img=new Image();
+  img.onload=()=>{let txt=null;try{for(const max of [1200,800,1800]){const s=Math.min(1,max/Math.max(img.width,img.height));const w=Math.round(img.width*s),h=Math.round(img.height*s);
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;const x=cv.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,w,h);txt=decodeImageData(x.getImageData(0,0,w,h));if(txt)break}}
+    catch(e){if(msg)msg.textContent='No se pudo cargar el lector de QR. Conéctate a internet una vez y vuelve a intentar.';URL.revokeObjectURL(url);return}
+    URL.revokeObjectURL(url);if(txt)loadFriend(txt);else if(msg)msg.textContent='No encontré un QR en la foto. Acércate más, que salga completo y sin reflejos.'};
+  img.onerror=()=>{if(msg)msg.textContent='No pude abrir esa imagen.'};img.src=url}
+async function startCam(){const v=document.getElementById('camv'),wrap=document.getElementById('camwrap'),msg=document.getElementById('scanmsg');
+  try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});v.srcObject=camStream;await v.play();wrap.hidden=false}
+  catch(e){if(msg)msg.textContent='No se pudo abrir la cámara. Revisa el permiso de cámara para esta app o usa una foto.';return}
+  const cv=document.createElement('canvas'),x=cv.getContext('2d',{willReadFrequently:true});
+  const tick=()=>{if(!camStream)return;if(v.readyState>=2){const s=Math.min(1,900/Math.max(v.videoWidth,v.videoHeight));cv.width=Math.round(v.videoWidth*s);cv.height=Math.round(v.videoHeight*s);x.drawImage(v,0,0,cv.width,cv.height);
+      let t=null;try{t=decodeImageData(x.getImageData(0,0,cv.width,cv.height))}catch(e){stopCam();if(msg)msg.textContent='No se pudo cargar el lector de QR.';return}if(t){stopCam();loadFriend(t);return}}
+    camRaf=requestAnimationFrame(tick)};camRaf=requestAnimationFrame(tick)}
+function stopCam(){cancelAnimationFrame(camRaf);if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}}
+
 /* ---------- Compartir ---------- */
 function compress(arr,sec){if(!(sec.kind==='num'||sec.kind==='code'))return arr.map(x=>x.share);const out=[];let i=0;
   while(i<arr.length){let j=i;while(j+1<arr.length&&arr[j+1].num===arr[j].num+1)j++;out.push(j-i>=2?arr[i].share+'-'+arr[j].share:arr.slice(i,j+1).map(x=>x.share).join('\u0000'));i=j+1}
@@ -510,6 +627,7 @@ function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;
   ${it('mnew','⧉','Coleccionar copia nueva','Misma configuración, empieza desde 0')}
   ${it('mdup','⎘','Duplicar con lo marcado','Copia exacta, incluye figuritas y repetidas')}
   ${it('medit','✎','Editar álbum','Secciones, variantes, brillos y formato al compartir')}
+  ${it('mtrade','⇄','Intercambiar','Compara con un amigo que tenga la misma configuración')}
   ${it('mgroup','▤','Mover a grupo',(S.groups||[]).find(g=>g.id===c.group)?.name?'Ahora en: '+(S.groups||[]).find(g=>g.id===c.group).name:'Sin agrupación')}
   ${it('medit','◐','Variantes y brillos','Colores, acabados y brillos de esta colección').replace('data-a="medit"','data-a="medit" data-t="vars"')}
   ${it('mexp','⇪','Exportar configuración','JSON para respaldo o para pasárselo a otra persona')}
@@ -557,7 +675,7 @@ function doImport(text,single){let o;try{o=JSON.parse(text)}catch(e){return toas
 
 /* ---------- Utilidades UI ---------- */
 function sheet(h){document.getElementById('sheetBody').innerHTML=h;document.getElementById('sheet').hidden=false}
-function closeSheet(){document.getElementById('sheet').hidden=true}
+function closeSheet(){if(typeof stopCam==='function')stopCam();document.getElementById('sheet').hidden=true}
 let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2200)}
 async function copy(text,el){try{await navigator.clipboard.writeText(text);toast('Copiado')}catch(e){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Texto seleccionado: cópialo con el menú')}}
 
@@ -634,6 +752,21 @@ document.addEventListener('click',e=>{
    case 'mgroup':openGroupPick(b.dataset.id);break;
    case 'gset':{const c1=S.cols.find(x=>x.id===b.dataset.id);if(b.dataset.g)c1.group=b.dataset.g;else delete c1.group;save();closeSheet();render();toast(b.dataset.g?'Movida a '+S.groups.find(g=>g.id===b.dataset.g).name:'Movida a Sin agrupación');break}
    case 'gnewset':{const v=clean(document.getElementById('g-new2').value);if(!v){toast('Escribe un nombre para el grupo');break}const g={id:uid(),name:v};S.groups.push(g);S.cols.find(x=>x.id===b.dataset.id).group=g.id;save();closeSheet();render();toast('Movida a '+v);break}
+   case 'trade':trade=null;view='trade';render();scrollTo(0,0);break;
+   case 'mtrade':closeSheet();cur=b.dataset.id;trade=null;view='trade';render();scrollTo(0,0);break;
+   case 'tback':stopCam();trade=null;view='album';render();scrollTo(0,0);break;
+   case 'tqr':openMyQR();break;
+   case 'tscan':openScan();break;
+   case 'tcam':startCam();break;
+   case 'tpaste':openPaste();break;
+   case 'tpastego':loadFriend(document.getElementById('tpastev').value);break;
+   case 'tcodecopy':copy(document.getElementById('tcode').textContent,document.getElementById('tcode'));break;
+   case 'tcodeshare':navigator.share({text:document.getElementById('tcode').textContent}).catch(()=>{});break;
+   case 'tsel':{const set=tradeSel[b.dataset.side],k=b.dataset.tk;set.has(k)?set.delete(k):set.add(k);tradeDel=false;const y=scrollY;render();scrollTo(0,y);break}
+   case 'tall':{const side=b.dataset.side,all=trade[side];tradeSel[side]=tradeSel[side].size===all.length?new Set():new Set(all);tradeDel=false;const y=scrollY;render();scrollTo(0,y);break}
+   case 'tcopy':{const c1=col();const t=tradeText(c1);sheet(`<div class="sechd"><h2 style="flex:1">Propuesta</h2><button class="btn sm" data-a="close">Cerrar</button></div><pre id="shtxt">${esc(t)}</pre><div class="acts"><button class="btn pri" data-a="copy">Copiar texto</button>${navigator.share&&window.IS_PWA?'<button class="btn" data-a="natshare">Enviar…</button>':''}</div>`);break}
+   case 'treg':if(!b.dataset.ok){tradeDel=true;const y=scrollY;render();scrollTo(0,y);break}{const c1=col();let g=0,d=0;tradeSel.get.forEach(k=>{c1.counts[k]=(c1.counts[k]||0)+1;g++});tradeSel.give.forEach(k=>{if((c1.counts[k]||0)>1){c1.counts[k]--;d++}});save();trade=null;view='album';render();scrollTo(0,0);toast(`Intercambio registrado: +${g} recibidas, −${d} entregadas`);break}
+   case 'treset':trade=null;render();scrollTo(0,0);break;
    case 'colmenu':menuDel=false;openColMenu(b.dataset.id);break;
    case 'mnew':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),false);closeSheet();render();toast('Copia nueva lista: '+n.name);break}
    case 'mdup':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),true);closeSheet();render();toast('Duplicada: '+n.name);break}
@@ -663,7 +796,7 @@ document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.gnam
 });
 document.addEventListener('input',()=>{if(view==='edit')updSaveBar()});
 document.addEventListener('click',()=>{if(view==='edit')setTimeout(updSaveBar)});
-document.addEventListener('change',e=>{if(e.target.id==='impf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById('imp').value=r.result;toast('Archivo cargado. Revisa y pulsa importar.')};r.readAsText(f)}});
+document.addEventListener('change',e=>{if(e.target.id==='qrimg'){const f=e.target.files[0];if(f)scanFile(f);return}if(e.target.id==='impf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById('imp').value=r.result;toast('Archivo cargado. Revisa y pulsa importar.')};r.readAsText(f)}});
 let lp=null,lpFired=false;
 document.addEventListener('pointerdown',e=>{const t=e.target.closest('.tile[data-k]');if(!t||view!=='album'||tab!=='album'||col().locked)return;lpFired=false;clearTimeout(lp);
   lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}const k=t.dataset.k;if((col().counts[k]||0)>=QTY_MIN)openQty(k);else bump(k,-1)},480)});
