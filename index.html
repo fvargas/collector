@@ -280,7 +280,7 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <style id="txs"></style>
 
 <script>
-const APP_VER='10';
+const APP_VER='11';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -423,11 +423,11 @@ function repTileHTML(c,s,it,z,e,na){const v=varOf(c,z.vid);
   return `<button class="tile ${e>0?'has':''} ${na?'na':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(z.k)}" title="${esc(it.share+(vidOfSlot(z.k)?' · '+v.name:''))}"><span class="lb">${esc(it.app)}</span>${e>0?`<span class="n">×${e}</span>`:''}</button>`}
 function uiSel(c,s,kind,avail){c.ui=c.ui||{};const m=(c.ui[kind]=c.ui[kind]||{});const v=m[s.id];
   if(kind==='act')return avail.includes(v)?[v]:avail.slice(0,1);
-  const l=(Array.isArray(v)?v:[]).filter(id=>avail.includes(id));return l.length?l:avail.slice(0,1)}
+  const l=(Array.isArray(v)?v:[v]).filter(id=>avail.includes(id));return l.length?l.slice(0,1):avail.slice(0,1)}
 const goalVarsOf=(c,s)=>secVars(c,s).filter(id=>inGoalSec(c,s,id));
 const secAct=(c,s)=>uiSel(c,s,'act',goalVarsOf(c,s))[0]||null;
 function selChips(c,s,kind,avail,count){if(avail.length<2)return '';const sel=uiSel(c,s,kind,avail);
-  return `<div class="schips" role="group" aria-label="${kind==='act'?'Marcar en':'Variantes a mostrar'}"><span class="lbl">${kind==='act'?'Marcar en':'Ver'}</span>${avail.map(id=>{const v=varOf(c,id);const n=count?count(id):null;
+  return `<div class="schips" role="group" aria-label="${kind==='act'?'Marcar en':'Variantes a mostrar'}"><span class="lbl">${kind==='act'?'Marcar en':kind==='miss'?'Faltantes de':'Repetidas de'}</span>${avail.map(id=>{const v=varOf(c,id);const n=count?count(id):null;
     return `<button class="actv" data-a="schip" data-kind="${kind}" data-s="${s.id}" data-id="${id}" aria-pressed="${sel.includes(id)}" style="${esc(vStyle(v))}"><i class="sw v-${v.effect} ${txCls(c,v)}"></i>${esc(v.name)}${n!=null?`<span class="cnt">${n}</span>`:''}</button>`}).join('')}</div>`}
 function activeVar(c){const used=[];c.sections.forEach(s=>secVars(c,s).forEach(id=>{if(inGoalSec(c,s,id)&&!used.includes(id))used.push(id)}));if(!used.length)return {used,act:null};return {used,act:used.includes(c.activeVar)?c.activeVar:used[0]}}
 function slotTileHTML(c,s,it,slot,n,badge){const v=varOf(c,slot.vid);
@@ -979,7 +979,7 @@ document.addEventListener('click',e=>{
    case 'actv':{const c1=col();c1.activeVar=b.dataset.id;save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
    case 'mqt':{const k=b.dataset.k;if((mq.vals[k]||0)>1)break;mq.vals[k]=mq.vals[k]?0:1;b.classList.toggle('pri',!!mq.vals[k]);b.setAttribute('aria-pressed',!!mq.vals[k]);b.textContent=mq.vals[k]?'La tengo ✓':'No la tengo';break}
    case 'schip':{const c1=col();const sec=c1.sections.find(x=>x.id===b.dataset.s);if(!sec)break;const kind=b.dataset.kind,id=b.dataset.id;c1.ui=c1.ui||{};c1.ui[kind]=c1.ui[kind]||{};
-     if(kind==='act')c1.ui.act[sec.id]=id;else{const cur=new Set([...b.parentNode.querySelectorAll('[aria-pressed="true"]')].map(x=>x.dataset.id));if(cur.has(id)){if(cur.size===1){toast('Deja al menos una variante a la vista');break}cur.delete(id)}else cur.add(id);c1.ui[kind][sec.id]=[...cur]}
+     if(kind==='act')c1.ui.act[sec.id]=id;else c1.ui[kind][sec.id]=[id];
      save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
    case 'secfold':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=!c1.ui.fold[b.dataset.s];save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
    case 'secnext':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=true;c1.ui.fold[b.dataset.n]=false;save();document.getElementById('main').innerHTML=albumHTML();document.getElementById('sec-'+b.dataset.n)?.scrollIntoView({block:'start'});break}
