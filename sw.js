@@ -1,6 +1,6 @@
 // Funciona sin internet: guarda la app y las fuentes la primera vez que se abre.
 // Cuando cambies index.html, sube el número de VERSION para que los celulares descarguen la nueva.
-const VERSION = 'figuritas-v13';
+const VERSION = 'figuritas-v14';
 const APP = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

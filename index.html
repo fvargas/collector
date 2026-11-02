@@ -269,6 +269,8 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .sechead h4{cursor:pointer}
 .sec.folded{margin-bottom:6px}.sec.folded .bar2{margin-bottom:4px}
 .secfoot{display:flex;justify-content:flex-end;margin-top:10px}
+.grid .tile.txa::after,.grid .tile.v-holo{animation:none!important}
+.sec{content-visibility:auto;contain-intrinsic-size:auto 420px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -280,7 +282,7 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <style id="txs"></style>
 
 <script>
-const APP_VER='13';
+const APP_VER='14';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -316,8 +318,9 @@ function txURL(t,base){const R=rng(t.id+t.shape+t.count+t.size+t.palette),W=64,s
     else {const rr=(3+R()*5)*sz;g+=`<circle cx="${f(x)}" cy="${f(y)}" r="${f(rr)}" fill="${c}" fill-opacity=".12" stroke="${c}" stroke-opacity="${o}" stroke-width="${f(.8*sz)}"/><circle cx="${f(x-rr*.35)}" cy="${f(y-rr*.35)}" r="${f(rr*.22)}" fill="#fff" opacity=".8"/>`}}
   return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">${g}</svg>`)}")`}
 const txRules={};
-function txClass(t,base){const cls='tx_'+hstr(JSON.stringify([t.id,t.shape,t.count,t.size,t.palette,t.palette==='base'?base:''])).toString(36);
-  if(!txRules[cls]){txRules[cls]=1;const st=document.getElementById('txs');if(st)st.textContent+=`.${cls}{--tx:${txURL(t,base)}}\n`}return cls}
+const TXM=new Map();
+function txClass(t,base){const mk=t.id+'|'+t.shape+'|'+t.count+'|'+t.size+'|'+t.palette+'|'+(t.palette==='base'?base:'');const hit=TXM.get(mk);if(hit)return hit;const cls='tx_'+hstr(JSON.stringify([t.id,t.shape,t.count,t.size,t.palette,t.palette==='base'?base:''])).toString(36);
+  if(!txRules[cls]){txRules[cls]=1;const st=document.getElementById('txs');if(st)st.textContent+=`.${cls}{--tx:${txURL(t,base)}}\n`}TXM.set(mk,cls);return cls}
 const texOf=(c,v)=>v&&v.texture&&(c.textures||[]).find(t=>t.id===v.texture);
 function txCls(c,v){const t=texOf(c,v);return t?`tx ${txClass(t,v.color)}${t.anim?' txa':''}`:''}
 const vStyle=v=>`--vc:${v.color};--on:${onColor(v.color)}`;
@@ -361,7 +364,9 @@ let S;
 try{S=JSON.parse(localStorage.getItem(LS))}catch(e){}
 if(!S||!Array.isArray(S.cols))S={cols:[seedAnime()],v:2};
 if((S.v||1)<2){S.cols.forEach(c=>{c.share=Object.assign(defShare(),c.share,{nameOwnLine:true});c.sections.forEach(x=>x.breakShare=true)});S.v=2;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
-function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+let saveT=0;function saveNow(){clearTimeout(saveT);saveT=0;try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+function save(){clearTimeout(saveT);saveT=setTimeout(saveNow,250)}
+addEventListener('pagehide',()=>{if(saveT)saveNow()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveT)saveNow()});
 
 let view='home',cur=null,tab='album',q='',repView='all';
 let draft=null,draftBase='',draftNew=false;
@@ -375,7 +380,11 @@ function updSaveBar(){const sb=document.getElementById('savebar');if(!sb)return;
 function askLeave(){sheet(`<h2>¿Guardar los cambios?</h2><p class="muted" style="margin:6px 0 14px">Modificaste la configuración de ${esc(draft.name)}.</p>
   <div class="acts"><button class="btn pri" data-a="esave">Guardar</button><button class="btn dng" data-a="ecancel">Descartar cambios</button><button class="btn" data-a="close">Seguir editando</button></div>`)}
 
-function items(sec){
+const ITC=new WeakMap();
+function items(sec){const sig=[sec.kind,sec.prefix,sec.from,sec.to,sec.letters,sec.specials,sec.allSpecial,JSON.stringify(sec.labels||[])].join('\u0001');const hit=ITC.get(sec);if(hit&&hit.sig===sig)return hit.list;
+  const list=itemsRaw(sec);ITC.set(sec,{sig,list,byCode:new Map(list.map(it=>[it.code,it]))});return list}
+const itemByCode=(sec,code)=>{items(sec);return ITC.get(sec).byCode.get(code)};
+function itemsRaw(sec){
   const out=[];const sp=parseSpecials(sec.specials);
   const push=(code,app,share,num)=>out.push({code:String(code),app,share,num,special:sec.allSpecial||sp.has(String(code).toUpperCase())||(num!=null&&sp.has(String(num)))});
   if(sec.kind==='num'){const a=+sec.from||0,b=+sec.to||0;for(let i=a;i<=b&&out.length<2000;i++)push(i,String(i),String(i),i)}
@@ -416,9 +425,8 @@ function stats(c){let t=0,h=0,nt=0,nh=0,st=0,sh=0,rep=0;for(const s of c.section
 function myNeeds(c){const slot=new Set(),item=new Set(),extra=new Map();
   for(const s of c.sections)for(const it of items(s)){const x=itemState(c,s,it);if(x.missItem)item.add(key(s,it));x.missSlots.forEach(m=>slot.add(m.k));x.extras.forEach(e=>extra.set(e.k,e.e))}
   return {slot,item,extra}}
-function slotBase(c,k){const {sec,it}=findItem(c,k);if(!sec||!it)return null;const st=itemState(c,sec,it);const z=st.sl.find(x=>x.k===k);if(!z)return null;
-  if(goalOf(c)==='any'){if(!st.tot)return null;const keep=st.sl.find(x=>x.n>0);return keep&&keep.k===k?1:0}
-  return z.goal?(z.n>0?1:null):0}
+function baseOf(c,st,z){if(goalOf(c)==='any'){if(!st.tot)return null;const keep=st.sl.find(x=>x.n>0);return keep&&keep.k===z.k?1:0}return z.goal?(z.n>0?1:null):0}
+function slotBase(c,k){const {sec,it}=findItem(c,k);if(!sec||!it)return null;const st=itemState(c,sec,it);const z=st.sl.find(x=>x.k===k);if(!z)return null;return baseOf(c,st,z)}
 function repTileHTML(c,s,it,z,e,na){const v=varOf(c,z.vid);
   return `<button class="tile ${e>0?'has':''} ${na?'na':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(z.k)}" title="${esc(it.share+(vidOfSlot(z.k)?' · '+v.name:''))}"><span class="lb">${esc(it.app)}</span>${e>0?`<span class="n">×${e}</span>`:''}</button>`}
 function uiSel(c,s,kind,avail){c.ui=c.ui||{};const m=(c.ui[kind]=c.ui[kind]||{});const v=m[s.id];
@@ -510,34 +518,36 @@ function chips(c,sec){const vs=[];
   const meta=outAll?`<span class="vchip meta">Fuera de tu meta</span>`:'';
   return `<div class="vchips">${meta}${vs.map(([v,p,off])=>`<span class="vchip ${off?'off':''}" style="${esc(vStyle(v))}"><i class="sw v-${v.effect} ${txCls(c,v)}"></i>${p}${esc(v.name)} · ${esc(vLabel(c,v))}</span>`).join('')}</div>`}
 function vsubHTML(c,vid,n){const v=varOf(c,vid);return `<div class="vsub" style="${esc(vStyle(v))}"><i class="sw v-${v.effect} ${txCls(c,v)}"></i>${esc(v.name)}<span class="muted">${n}</span></div>`}
-function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;const g=goalOf(c);const {used,act}=activeVar(c);
-  let h=`<div class="sum">${ring(p)}<div style="min-width:0"><div class="big">${s.h} de ${s.t}</div><div class="kv"><span>Faltan <b>${s.t-s.h}</b></span><span>Normales <b>${s.nh}/${s.nt}</b></span><span>Especiales <b>${s.sh}/${s.st}</b></span><span>Repetidas <b>${s.rep}</b></span>${used.length?`<span>Meta <b>${GOALS[g]}</b></span>`:''}</div></div></div>
-  <div class="tabs" role="tablist">${[['album','Álbum'],['miss','Faltantes'],['rep','Repetidas']].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div>
-  <div class="tools"><input type="search" id="q" placeholder="Buscar número o nombre" value="${esc(q)}">${tab==='rep'?`<div class="mode"><button aria-pressed="${repView==='all'}" data-a="repview" data-k="all">Agregar</button><button aria-pressed="${repView!=='all'}" data-a="repview" data-k="only">Solo mis repetidas</button></div>`:''}</div>
-  ${c.locked?`<div class="lockbar">${IC.lock.replace('<svg','<svg width="18" height="18"')}<span style="flex:1">Bloqueado: los toques no cambian nada</span><button class="btn sm" data-a="lock">Desbloquear</button></div>`:''}<p class="hint">${tab==='rep'?(repView==='all'?'Toca para sumar una repetida, mantén presionado para quitar una. Aquí puedes cargar repetidas de cualquier sección o variante, aunque no la colecciones. Las tenues son las que te faltan.':'Mantén presionado para quitar una repetida cuando la entregues. Con 4 o más se abre el contador.'):tab==='miss'?'Toca una faltante cuando la consigas.':used.length?'Toca para marcar o desmarcar que la tienes, en la variante elegida en cada sección. Mantén presionado para ver todas sus variantes. Las repetidas se cargan en la pestaña Repetidas.':'Toca para marcar o desmarcar que la tienes. Las repetidas se cargan en la pestaña Repetidas.'}</p>`;
-  const qq=q.trim().toUpperCase();let any=false;const out=[];const fold=(c.ui&&c.ui.fold)||{};
-  for(const sec of c.sections){if(!sec.showApp)continue;const multi=isMulti(sec);
+function sumHTML(c,s,p,g,used){if(!s){s=stats(c);p=s.t?Math.round(s.h/s.t*100):0;g=goalOf(c);used=activeVar(c).used}return `<div class="sum">${ring(p)}<div style="min-width:0"><div class="big">${s.h} de ${s.t}</div><div class="kv"><span>Faltan <b>${s.t-s.h}</b></span><span>Normales <b>${s.nh}/${s.nt}</b></span><span>Especiales <b>${s.sh}/${s.st}</b></span><span>Repetidas <b>${s.rep}</b></span>${used.length?`<span>Meta <b>${GOALS[g]}</b></span>`:''}</div></div></div>`}
+function secBlock(c,sec,qq){if(!sec.showApp)return null;const fold=(c.ui&&c.ui.fold)||{};const multi=isMulti(sec);
     const all=items(sec);let list=all;if(qq)list=list.filter(it=>it.app.toUpperCase().includes(qq)||it.share.toUpperCase().includes(qq)||it.code.toUpperCase()===qq);
     let U=0,H=0;const st=new Map();all.forEach(it=>{const x=itemState(c,sec,it);st.set(it,x);U+=x.units;H+=x.have});
     const wide=sec.kind==='labels'?'wide':'';const grid=t=>`<div class="grid ${wide}">${t}</div>`;let body='',cnt='';
-    if(tab==='album'){if(!list.length||!U)continue;
+    if(tab==='album'){if(!list.length||!U)return null;
       if(multi){const av=goalVarsOf(c,sec);body=selChips(c,sec,'act',av,id=>{let hv=0;all.forEach(it=>{if((c.counts[key(sec,it)+'@'+id]||0)>0)hv++});return hv+'/'+all.length})}
       body+=grid(list.map(it=>multi?mtileHTML(c,sec,it):tileHTML(c,sec,it)).join(''));cnt=H+' / '+U}
     else if(tab==='miss'){
-      const g=secGoal(c,sec);if(g==='any'||!multi){const l=list.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0});if(!l.length)continue;
+      const g=secGoal(c,sec);if(g==='any'||!multi){const l=list.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0});if(!l.length)return null;
         body=grid(l.map(it=>multi?mtileHTML(c,sec,it):slotTileHTML(c,sec,it,st.get(it).sl[0],0,0)).join(''));cnt=l.length+' faltan'}
-      else{const per=new Map();secVars(c,sec).forEach(vid=>{const l=list.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid));if(l.length)per.set(vid,l)});if(!per.size)continue;
+      else{const per=new Map();secVars(c,sec).forEach(vid=>{const l=list.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid));if(l.length)per.set(vid,l)});if(!per.size)return null;
           const av=[...per.keys()];const sel=uiSel(c,sec,'miss',av);let n=0;per.forEach(l=>n+=l.length);
           body=selChips(c,sec,'miss',av,id=>per.get(id).length);
           sel.forEach(vid=>{const l=per.get(vid);body+=vsubHTML(c,vid,l.length)+grid(l.map(it=>slotTileHTML(c,sec,it,st.get(it).missSlots.find(m=>m.vid===vid),0,0)).join(''))});cnt=n+' faltan'}}
     else{let n=0,shown=0;const per=new Map();const vids=multi?secVars(c,sec):[null];
-      vids.forEach(vid=>{let e=0;list.forEach(it=>{const z=st.get(it).sl.find(z=>multi?z.vid===vid:true);if(!z)return;const b=slotBase(c,z.k);if(b!==null&&z.n-b>0)e+=z.n-b});per.set(vid,e)});
-      let showV=vids;if(multi){const av=repView==='all'?vids:vids.filter(v=>per.get(v)>0);if(!av.length)continue;body=selChips(c,sec,'rep',av,id=>per.get(id));showV=uiSel(c,sec,'rep',av);vids.forEach(v=>n+=per.get(v))}
-      showV.forEach(vid=>{const l=[];list.forEach(it=>{const x=st.get(it);const z=x.sl.find(z=>multi?z.vid===vid:true);if(!z)return;const base=slotBase(c,z.k);const e=base===null?0:z.n-base;if(repView!=='all'&&e<=0)return;l.push([it,z,e,base===null])});if(!l.length)return;
+      vids.forEach(vid=>{let e=0;list.forEach(it=>{const z=st.get(it).sl.find(z=>multi?z.vid===vid:true);if(!z)return;const b=baseOf(c,st.get(it),z);if(b!==null&&z.n-b>0)e+=z.n-b});per.set(vid,e)});
+      let showV=vids;if(multi){const av=repView==='all'?vids:vids.filter(v=>per.get(v)>0);if(!av.length)return null;body=selChips(c,sec,'rep',av,id=>per.get(id));showV=uiSel(c,sec,'rep',av);vids.forEach(v=>n+=per.get(v))}
+      showV.forEach(vid=>{const l=[];list.forEach(it=>{const x=st.get(it);const z=x.sl.find(z=>multi?z.vid===vid:true);if(!z)return;const base=baseOf(c,x,z);const e=base===null?0:z.n-base;if(repView!=='all'&&e<=0)return;l.push([it,z,e,base===null])});if(!l.length)return;
         const e=l.reduce((a,[,,e])=>a+e,0);if(!multi)n+=e;shown+=l.length;
-        body+=(multi?vsubHTML(c,vid,e)+(inGoalSec(c,sec,vid)?'':'<span class="vchip meta" style="margin:-2px 0 6px;display:inline-flex">Fuera de tu meta</span>'):'')+grid(l.map(([it,z,e,na])=>repTileHTML(c,sec,it,z,e,na)).join(''))});if(!shown&&!(multi&&body))continue;cnt=n+' rep.'}
-    any=true;const v=varOf(c,multi?secVars(c,sec)[0]:sec.variant);
-    out.push({sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span></div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body}</section>`}})}
+        body+=(multi?vsubHTML(c,vid,e)+(inGoalSec(c,sec,vid)?'':'<span class="vchip meta" style="margin:-2px 0 6px;display:inline-flex">Fuera de tu meta</span>'):'')+grid(l.map(([it,z,e,na])=>repTileHTML(c,sec,it,z,e,na)).join(''))});if(!shown&&!(multi&&body))return null;cnt=n+' rep.'}
+    const v=varOf(c,multi?secVars(c,sec)[0]:sec.variant);
+    return {sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span></div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body}</section>`}}}
+function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;const g=goalOf(c);const {used,act}=activeVar(c);
+  let h=`${sumHTML(c,s,p,g,used)}
+  <div class="tabs" role="tablist">${[['album','Álbum'],['miss','Faltantes'],['rep','Repetidas']].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" data-a="tab" data-t="${k}">${l}</button>`).join('')}</div>
+  <div class="tools"><input type="search" id="q" placeholder="Buscar número o nombre" value="${esc(q)}">${tab==='rep'?`<div class="mode"><button aria-pressed="${repView==='all'}" data-a="repview" data-k="all">Agregar</button><button aria-pressed="${repView!=='all'}" data-a="repview" data-k="only">Solo mis repetidas</button></div>`:''}</div>
+  ${c.locked?`<div class="lockbar">${IC.lock.replace('<svg','<svg width="18" height="18"')}<span style="flex:1">Bloqueado: los toques no cambian nada</span><button class="btn sm" data-a="lock">Desbloquear</button></div>`:''}<p class="hint">${tab==='rep'?(repView==='all'?'Toca para sumar una repetida, mantén presionado para quitar una. Aquí puedes cargar repetidas de cualquier sección o variante, aunque no la colecciones. Las tenues son las que te faltan.':'Mantén presionado para quitar una repetida cuando la entregues. Con 4 o más se abre el contador.'):tab==='miss'?'Toca una faltante cuando la consigas.':used.length?'Toca para marcar o desmarcar que la tienes, en la variante elegida en cada sección. Mantén presionado para ver todas sus variantes. Las repetidas se cargan en la pestaña Repetidas.':'Toca para marcar o desmarcar que la tienes. Las repetidas se cargan en la pestaña Repetidas.'}</p>`;
+  const qq=q.trim().toUpperCase();let any=false;const out=[];const fold=(c.ui&&c.ui.fold)||{};
+  for(const sec of c.sections){const o=secBlock(c,sec,qq);if(o){any=true;out.push(o)}}
   if(out.length>1)h+=`<nav class="secnav" aria-label="Ir a sección"><div class="secnav-in">${out.map(o=>`<button data-a="goto" data-s="${o.sec.id}" class="${fold[o.sec.id]?'f':''}">${esc(o.sec.name)}</button>`).join('')}</div><button class="ib sm" data-a="foldall" aria-label="Plegar o desplegar todas">${out.every(o=>fold[o.sec.id])?'▾':'▴'}</button></nav>`;
   out.forEach((o,i)=>{h+=o.html(out[i+1]?out[i+1].sec.id:null)});
   if(!any)h+=`<div class="empty">${tab==='rep'?'Todavía no tienes repetidas.':tab==='miss'?'¡No te falta ninguna!':'No hay figuritas que coincidan.'}</div>`;
@@ -885,7 +895,7 @@ let tt;function toast(m){const t=document.getElementById('toast');t.textContent=
 async function copy(text,el){try{await navigator.clipboard.writeText(text);toast('Copiado')}catch(e){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Texto seleccionado: cópialo con el menú')}}
 
 const QTY_MIN=4;let qtyKey=null,qtyVal=0,qtyLabel='',qtyBase=0;
-function findItem(c,k){k=itemKeyOf(k);const i=k.indexOf('|');const sec=c.sections.find(s=>s.id===k.slice(0,i));const code=k.slice(i+1);const it=sec&&items(sec).find(x=>x.code===code);return {sec,it}}
+function findItem(c,k){k=itemKeyOf(k);const i=k.indexOf('|');const sec=c.sections.find(s=>s.id===k.slice(0,i));const code=k.slice(i+1);const it=sec&&itemByCode(sec,code);return {sec,it}}
 const qtySub=n=>n===0?'Sin repetidas':n===1?'1 repetida':`${n} repetidas`;
 function openQty(k){const c=col();const {sec,it}=findItem(c,k);qtyKey=k;qtyBase=Math.max(0,slotBase(c,k)||0);qtyVal=(c.counts[k]||0)-qtyBase;const sv=vidOfSlot(k);const v=varOf(c,sv||(it&&it.special?(sec.specialVariant||sec.variant):sec?.variant));
   qtyLabel=(it?(sec.kind==='num'?'Figurita '+it.share:it.share):k)+(sv?' · '+v.name:'');
@@ -893,8 +903,24 @@ function openQty(k){const c=col();const {sec,it}=findItem(c,k);qtyKey=k;qtyBase=
   <div class="qrow"><button class="qb" data-a="qminus" aria-label="Quitar una">−</button><output id="qval" aria-live="polite">${qtyVal}</output><button class="qb" data-a="qplus" aria-label="Agregar una">+</button></div>
   <div class="qacts"><button class="btn" data-a="close">Cancelar</button><button class="btn pri" data-a="qok">Confirmar</button></div></div>`)}
 function updQty(){document.getElementById('qval').textContent=qtyVal;document.getElementById('qsub').textContent=qtySub(qtyVal)}
+function fastTile(k){if(view!=='album'||tab==='miss'||q.trim())return false;const c=col();const ik=itemKeyOf(k);const {sec,it}=findItem(c,ik);if(!sec||!it)return false;
+  const secEl=document.getElementById('sec-'+sec.id);if(!secEl)return false;const multi=isMulti(sec);const esc2=x=>x.replace(/["\\]/g,'\\$&');
+  if(tab==='album'){const el=multi?secEl.querySelector('[data-mk="'+esc2(ik)+'"]'):secEl.querySelector('.tile[data-k="'+esc2(k)+'"]');if(!el)return false;
+    el.outerHTML=multi?mtileHTML(c,sec,it):tileHTML(c,sec,it);let U=0,H=0;items(sec).forEach(x=>{const z=itemState(c,sec,x);U+=z.units;H+=z.have});
+    const cEl=secEl.querySelector('.sechead .c');if(cEl)cEl.textContent=H+' / '+U;const bar=secEl.querySelector('.bar2 i');if(bar)bar.style.width=(U?H/U*100:0)+'%';
+    if(multi){const act=secAct(c,sec);const ch=secEl.querySelector('.schips [data-id="'+esc2(act||'')+'"] .cnt');if(ch){let hv=0;const all=items(sec);all.forEach(x=>{if((c.counts[key(sec,x)+'@'+act]||0)>0)hv++});ch.textContent=hv+'/'+all.length}}}
+  else{const el=secEl.querySelector('.tile[data-k="'+esc2(k)+'"]');if(!el)return false;const st=itemState(c,sec,it);const z=st.sl.find(x=>x.k===k);if(!z)return false;const b=baseOf(c,st,z);const e=b===null?0:z.n-b;
+    if(repView!=='all'&&e<=0)return false;const old=+((el.querySelector('.n')||{}).textContent||'0').replace('×','')||0;el.outerHTML=repTileHTML(c,sec,it,z,e,b===null);const dlt=e-old;
+    const cEl=secEl.querySelector('.sechead .c');if(cEl)cEl.textContent=((parseInt(cEl.textContent)||0)+dlt)+' rep.';
+    if(multi){const ch=secEl.querySelector('.schips [data-id="'+esc2(z.vid)+'"] .cnt');if(ch)ch.textContent=(parseInt(ch.textContent)||0)+dlt;const vs=secEl.querySelector('.vsub .muted');if(vs)vs.textContent=(parseInt(vs.textContent)||0)+dlt}}
+  const sm=document.querySelector('#main .sum');if(sm)sm.outerHTML=sumHTML(c);return true}
+function refreshSec(secId){if(view!=='album')return;const c=col();const sec=c.sections.find(x=>x.id===secId);const el=document.getElementById('sec-'+secId);
+  if(!sec||!el){const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);return}
+  const o=secBlock(c,sec,q.trim().toUpperCase());if(o)el.outerHTML=o.html(null);else el.remove();
+  const sm=document.querySelector('#main .sum');if(sm)sm.outerHTML=sumHTML(c);
+  const nb=document.querySelector('.secnav [data-s="'+secId+'"]');if(nb)nb.classList.toggle('f',!!(c.ui&&c.ui.fold&&c.ui.fold[secId]))}
 function bump(k,d){const c=col();const n=Math.max(0,(c.counts[k]||0)+d);if(n)c.counts[k]=n;else delete c.counts[k];save();
-  const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y)}
+  if(!fastTile(k))refreshSec(itemKeyOf(k).split('|')[0])}
 
 /* ---------- Eventos ---------- */
 document.addEventListener('click',e=>{
@@ -920,7 +946,7 @@ document.addEventListener('click',e=>{
    case 'ttoggle':openTx=openTx===b.dataset.id?null:b.dataset.id;armed=null;{const y=scrollY;render();scrollTo(0,y)}break;
    case 'tab':tab=b.dataset.t;render();break;
    case 'qminus':case 'qplus':{qtyVal=Math.max(0,Math.min(999,qtyVal+(a==='qplus'?1:-1)));updQty();break}
-   case 'qok':{const c2=col();const tot=qtyVal+qtyBase;if(tot)c2.counts[qtyKey]=tot;else delete c2.counts[qtyKey];save();closeSheet();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
+   case 'qok':{const c2=col();const tot=qtyVal+qtyBase;if(tot)c2.counts[qtyKey]=tot;else delete c2.counts[qtyKey];save();closeSheet();refreshSec(itemKeyOf(qtyKey).split('|')[0]);break}
    case 'share':openShare();break;
    case 'sho':shOpt[b.dataset.k]=!shOpt[b.dataset.k];openShare();break;
    case 'copy':copy(document.getElementById('shtxt').textContent,document.getElementById('shtxt'));break;
@@ -988,14 +1014,14 @@ document.addEventListener('click',e=>{
    case 'mqt':{const k=b.dataset.k;if((mq.vals[k]||0)>1)break;mq.vals[k]=mq.vals[k]?0:1;b.classList.toggle('pri',!!mq.vals[k]);b.setAttribute('aria-pressed',!!mq.vals[k]);b.textContent=mq.vals[k]?'La tengo ✓':'No la tengo';break}
    case 'schip':{const c1=col();const sec=c1.sections.find(x=>x.id===b.dataset.s);if(!sec)break;const kind=b.dataset.kind,id=b.dataset.id;c1.ui=c1.ui||{};c1.ui[kind]=c1.ui[kind]||{};
      if(kind==='act')c1.ui.act[sec.id]=id;else c1.ui[kind][sec.id]=[id];
-     save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
-   case 'secfold':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=!c1.ui.fold[b.dataset.s];save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
+     save();refreshSec(sec.id);break}
+   case 'secfold':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=!c1.ui.fold[b.dataset.s];save();refreshSec(b.dataset.s);break}
    case 'secnext':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};c1.ui.fold[b.dataset.s]=true;c1.ui.fold[b.dataset.n]=false;save();document.getElementById('main').innerHTML=albumHTML();document.getElementById('sec-'+b.dataset.n)?.scrollIntoView({block:'start'});break}
    case 'goto':{const c1=col();c1.ui=c1.ui||{};c1.ui.fold=c1.ui.fold||{};if(c1.ui.fold[b.dataset.s]){c1.ui.fold[b.dataset.s]=false;save();document.getElementById('main').innerHTML=albumHTML()}document.getElementById('sec-'+b.dataset.s)?.scrollIntoView({block:'start'});break}
    case 'foldall':{const c1=col();c1.ui=c1.ui||{};const ids=[...document.querySelectorAll('.secnav [data-s]')].map(x=>x.dataset.s);const allF=ids.every(id=>(c1.ui.fold||{})[id]);c1.ui.fold=c1.ui.fold||{};ids.forEach(id=>c1.ui.fold[id]=!allF);save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,Math.min(y,document.body.scrollHeight));break}
    case 'repview':repView=b.dataset.k;{const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y)}break;
    case 'mqm':case 'mqp':{const k=b.dataset.k;mq.vals[k]=Math.max(0,Math.min(999,(mq.vals[k]||0)+(a==='mqp'?1:-1)));const o=document.getElementById('mq-'+vidOfSlot(k));if(o)o.textContent=mq.vals[k];break}
-   case 'mqok':{const c1=col();Object.entries(mq.vals).forEach(([k,n])=>{if(n)c1.counts[k]=n;else delete c1.counts[k]});save();closeSheet();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
+   case 'mqok':{const c1=col();Object.entries(mq.vals).forEach(([k,n])=>{if(n)c1.counts[k]=n;else delete c1.counts[k]});save();closeSheet();refreshSec(mq.ik.split('|')[0]);break}
    case 'secmulti':{const sx=c.sections[i];const on=b.dataset.k==='1';
      if(on&&!isMulti(sx)){sx.vars=[sx.variant,sx.specialVariant].filter((id,j,arr)=>id&&arr.indexOf(id)===j&&c.variants.some(v=>v.id===id));if(!sx.vars.length)sx.vars=[c.variants[0].id];migrateSecCounts(c,sx,true);toast('Tus figuritas marcadas pasaron a '+varOf(c,sx.vars[0]).name+'. Marca las demás variantes en que sale.')}
      else if(!on&&isMulti(sx)){if(!sx.vars.includes(sx.variant))sx.variant=sx.vars[0];migrateSecCounts(c,sx,false);sx.vars=null;toast('Se conservaron las figuritas de '+varOf(c,sx.variant).name)}
