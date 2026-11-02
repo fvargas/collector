@@ -1,46 +1,80 @@
 {
   "formato": "album-figuritas",
   "version": 2,
-  "name": "Anime World",
+  "name": "Pokémon Anime World",
   "editorial": "Flash Edition",
   "variants": [
     {
-      "id": "vb",
+      "id": "basica",
       "name": "Básica",
       "color": "#6f7d95",
       "effect": "solid"
     },
     {
-      "id": "ve",
-      "name": "Especial dorada",
+      "id": "vidrio",
+      "name": "Vidrio",
+      "color": "#8fb4c9",
+      "effect": "solid",
+      "texture": "tx-vidrio"
+    },
+    {
+      "id": "estrella",
+      "name": "Estrella",
+      "color": "#c9a43b",
+      "effect": "solid",
+      "texture": "tx-estrella"
+    },
+    {
+      "id": "sin-efecto",
+      "name": "Sin efecto",
+      "color": "#5b7fd6",
+      "effect": "solid"
+    },
+    {
+      "id": "verde-escarcha",
+      "name": "Verde escarcha",
+      "color": "#2fa36b",
+      "effect": "solid",
+      "texture": "tx-escarcha"
+    },
+    {
+      "id": "dorado-escarcha",
+      "name": "Dorado escarcha",
       "color": "#e2a33b",
       "effect": "metal",
       "texture": "tx-escarcha"
     },
     {
-      "id": "vl",
-      "name": "Vidrio celeste",
-      "color": "#6cc8e0",
+      "id": "verde-vidrio",
+      "name": "Verde vidrio",
+      "color": "#2fa36b",
       "effect": "solid",
       "texture": "tx-vidrio"
     },
     {
-      "id": "vt",
-      "name": "Azul sectorizada",
+      "id": "azul-vidrio",
+      "name": "Azul vidrio",
       "color": "#3f7be3",
-      "effect": "solid"
+      "effect": "solid",
+      "texture": "tx-vidrio"
     },
     {
-      "id": "vj",
-      "name": "Jumbo holo",
-      "color": "#b66cf6",
-      "effect": "holo"
+      "id": "plateado",
+      "name": "Plateado",
+      "color": "#aeb7c4",
+      "effect": "metal"
     },
     {
-      "id": "vg",
-      "name": "Verde",
-      "color": "#2fa36b",
-      "effect": "solid"
+      "id": "dorado",
+      "name": "Dorado",
+      "color": "#e2a33b",
+      "effect": "metal"
+    },
+    {
+      "id": "celeste",
+      "name": "Celeste",
+      "color": "#6cc8e0",
+      "effect": "metal"
     }
   ],
   "share": {
@@ -59,7 +93,7 @@
   "counts": {},
   "sections": [
     {
-      "id": "sfyqjlk",
+      "id": "basicas",
       "name": "Lista Básicas",
       "shareName": "",
       "emoji": "",
@@ -71,58 +105,21 @@
       "labels": [],
       "specials": "",
       "allSpecial": false,
-      "variant": "vb",
+      "variant": "basica",
       "specialVariant": null,
       "showApp": true,
       "showShare": true,
       "gapApp": false,
       "breakShare": true,
-      "shareLayout": null
+      "shareLayout": null,
+      "vars": [
+        "basica",
+        "vidrio",
+        "estrella"
+      ]
     },
     {
-      "id": "wolr136",
-      "name": "Especiales E",
-      "shareName": "",
-      "emoji": "",
-      "kind": "code",
-      "prefix": "E",
-      "from": 1,
-      "to": 36,
-      "letters": "",
-      "labels": [],
-      "specials": "",
-      "allSpecial": true,
-      "variant": "ve",
-      "specialVariant": "ve",
-      "showApp": true,
-      "showShare": true,
-      "gapApp": true,
-      "breakShare": true,
-      "shareLayout": null
-    },
-    {
-      "id": "w0pub7w",
-      "name": "Especiales L",
-      "shareName": "",
-      "emoji": "",
-      "kind": "code",
-      "prefix": "L",
-      "from": 1,
-      "to": 9,
-      "letters": "",
-      "labels": [],
-      "specials": "",
-      "allSpecial": true,
-      "variant": "vl",
-      "specialVariant": "vl",
-      "showApp": true,
-      "showShare": true,
-      "gapApp": false,
-      "breakShare": true,
-      "shareLayout": null
-    },
-    {
-      "id": "2zqy4fe",
+      "id": "sectorizadas-t",
       "name": "Lista Sectorizadas T",
       "shareName": "",
       "emoji": "",
@@ -134,16 +131,66 @@
       "labels": [],
       "specials": "",
       "allSpecial": false,
-      "variant": "vt",
+      "variant": "sin-efecto",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "especiales-e",
+      "name": "Especiales E",
+      "shareName": "",
+      "emoji": "",
+      "kind": "code",
+      "prefix": "E",
+      "from": 1,
+      "to": 36,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "verde-escarcha",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "verde-escarcha",
+        "dorado-escarcha"
+      ]
+    },
+    {
+      "id": "especiales-l",
+      "name": "Especiales L",
+      "shareName": "",
+      "emoji": "",
+      "kind": "code",
+      "prefix": "L",
+      "from": 1,
+      "to": 9,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "verde-vidrio",
       "specialVariant": null,
       "showApp": true,
       "showShare": true,
       "gapApp": false,
       "breakShare": true,
-      "shareLayout": null
+      "shareLayout": null,
+      "vars": [
+        "verde-vidrio",
+        "azul-vidrio"
+      ]
     },
     {
-      "id": "7pwdka9",
+      "id": "jumbos",
       "name": "Lista Jumbos",
       "shareName": "",
       "emoji": "⭐",
@@ -174,22 +221,77 @@
           "share": "5) NEO QUEEN SERENITY"
         },
         {
-          "app": "6) VEGA",
-          "share": "6) VEGA ULTRA(EGO)"
+          "app": "6) VEGETA",
+          "share": "6) VEGETA ULTRA(EGO)"
         }
       ],
       "specials": "",
       "allSpecial": true,
-      "variant": "vj",
-      "specialVariant": "vj",
+      "variant": "plateado",
+      "specialVariant": null,
       "showApp": true,
       "showShare": true,
       "gapApp": true,
       "breakShare": true,
-      "shareLayout": null
+      "shareLayout": null,
+      "vars": [
+        "plateado",
+        "dorado"
+      ]
+    },
+    {
+      "id": "aniversary",
+      "name": "Aniversary Edition",
+      "shareName": "",
+      "emoji": "",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "1) GENGAR TOTORO",
+          "share": "1) GENGAR CON TRAJE DE TOTORO"
+        },
+        {
+          "app": "2) GRENINJA NARUTO",
+          "share": "2) GRENINJA CON TRAJE DE NARUTO"
+        },
+        {
+          "app": "3) SYLVEON SAILOR",
+          "share": "3) SYLVEON CON TRAJE DE SAILOR"
+        },
+        {
+          "app": "4) MIKYU DENJI",
+          "share": "4) MIMIKYU CON TRAJE DE DENJI"
+        },
+        {
+          "app": "5) SCEPTILE LEVI",
+          "share": "5) SCEPTILE CON TRAJE DE LEVI"
+        },
+        {
+          "app": "6) CHARIZARD ACE",
+          "share": "6) CHARIZARD CON TRAJE DE ACE"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "plateado",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null,
+      "vars": [
+        "plateado",
+        "dorado",
+        "celeste"
+      ]
     }
   ],
-  "tv": 1,
+  "goal": "all",
   "textures": [
     {
       "id": "tx-vidrio",
@@ -239,7 +341,7 @@
   ],
   "plantilla": {
     "id": "anime-world",
-    "version": 1,
-    "descripcion": "Álbum Anime World de Flash Edition: básicas, especiales E y L, sectorizadas T y jumbos."
+    "version": 2,
+    "descripcion": "Básicas 1-216 (básica, vidrio, estrella), Sectorizadas T, Especiales E y L, Jumbos y Aniversary Edition."
   }
 }

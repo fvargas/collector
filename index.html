@@ -280,7 +280,7 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <style id="txs"></style>
 
 <script>
-const APP_VER='11';
+const APP_VER='12';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -753,6 +753,13 @@ function loadTemplates(force){if(tplLoading&&!force)return tplLoading;
 const tplOf=c=>c.tpl&&tplCache&&tplCache.list.find(t=>t.id===c.tpl.id);
 const tplNewer=c=>{const t=tplOf(c);return t&&t.version>(c.tpl.version||0)?t:null};
 function colFromTemplate(t){const n=fromJSON(JSON.parse(JSON.stringify(t.data)));delete n.plantilla;n.counts={};n.tpl={id:t.id,file:t.file,version:t.version};return ensure(n)}
+let linkSel=null;
+function openLink(id){const c=S.cols.find(x=>x.id===id);const tl=tplCache;
+  sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">Pasar a una plantilla</h2><button class="btn sm" data-a="close">Cerrar</button></div>
+  <p class="muted" style="font-size:13px;margin:2px 0 8px">${esc(c.name)} tomará las secciones, variantes y brillos de la plantilla. Tus figuritas marcadas se pasan por nombre de sección y número; si una sección era de una sola variante y ahora tiene varias, van a la primera. Desde ahí recibirás sus actualizaciones.</p>
+  <div class="menu">${!tl?'<div class="empty">Buscando plantillas…</div>':!tl.ok||!tl.list.length?'<div class="empty">No hay plantillas publicadas en esta app.</div>':
+    tl.list.map((t,i)=>linkSel===i?`<button data-a="dolink" data-id="${c.id}" data-i="${i}" data-ok="1"><span class="mi">✓</span><span><b>Toca otra vez para usar ${esc(t.name)}</b><small>No se puede deshacer. Si quieres, exporta antes un respaldo.</small></span></button>`:`<button data-a="dolink" data-id="${c.id}" data-i="${i}"><span class="mi">▦</span><span><b>${esc(t.name)}</b><small>${esc([t.editorial,'versión '+t.version].filter(Boolean).join(' · '))}</small></span></button>`).join('')}</div>`);
+  if(!tl)loadTemplates().then(()=>{if(!document.getElementById('sheet').hidden)openLink(id)})}
 function openNewCol(){const tl=tplCache;
   const row=(a,ic,t,d,extra='')=>`<button data-a="${a}" ${extra}><span class="mi">${ic}</span><span><b>${t}</b><small>${d}</small></span></button>`;
   sheet(`<div class="sechd"><h2 style="flex:1">Nueva colección</h2><button class="btn sm" data-a="close">Cerrar</button></div>
@@ -770,7 +777,7 @@ function updateFromTemplate(c,t){const n=colFromTemplate(t);const oldSecs=c.sect
     const ns=newById.get(sid)||newByName.get(nameOf.get(sid));if(!ns){lost+=cnt;return}
     if(vid&&!newVarIds.has(vid))vid=newVarByName.get(vname.get(vid))||null;
     const it=items(ns).find(x=>x.code===code);if(!it){lost+=cnt;return}
-    let nk=key(ns,it);if(isMulti(ns)){const vv=vid&&ns.vars.includes(vid)?vid:null;if(!vv){lost+=cnt;return}nk+='@'+vv}else if(vid&&!isMulti(ns)){/* venía con variante y ahora es de una sola */}
+    let nk=key(ns,it);if(isMulti(ns)){const vv=vid&&ns.vars.includes(vid)?vid:(vid?null:ns.vars[0]);if(!vv){lost+=cnt;return}nk+='@'+vv}else if(vid&&!isMulti(ns)){/* venía con variante y ahora es de una sola */}
     counts[nk]=(counts[nk]||0)+cnt});
   const keep={id:c.id,name:c.name,counts,goal:c.goal,goalPairs:(c.goalPairs||[]).filter(k=>newById.has(k.split('@')[0])),activeVar:c.activeVar,locked:c.locked,group:c.group,copy:c.copy,share:c.share,tpl:{id:t.id,file:t.file,version:t.version}};
   const out=Object.assign(n,keep);const idx=S.cols.indexOf(c);S.cols[idx]=out;save();return lost}
@@ -820,6 +827,7 @@ function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;
   ${it('mnew','⧉','Coleccionar copia nueva','Misma configuración, empieza desde 0')}
   ${it('mdup','⎘','Duplicar con lo marcado','Copia exacta, incluye figuritas y repetidas')}
   ${it('medit','✎','Editar álbum','Secciones, variantes, brillos y formato al compartir')}
+  ${!c.tpl?it('mlink','▦','Pasar a una plantilla','Usa una plantilla publicada y conserva tus figuritas marcadas'):''}
   ${tplNewer(c)?(menuUpd?`<button data-a="mupd" data-id="${c.id}" data-ok="1"><span class="mi">⟳</span><span><b>Toca otra vez para actualizar</b><small>Se mantienen tus figuritas marcadas, tu meta y tu nombre.</small></span></button>`:it('mupd','⟳','Actualizar plantilla','Hay versión '+tplNewer(c).version+' (tienes la '+(c.tpl.version||1)+')')):''}
   ${it('mtrade','⇄','Intercambiar','Compara con un amigo que tenga la misma configuración')}
   ${it('mgroup','▤','Mover a grupo',(S.groups||[]).find(g=>g.id===c.group)?.name?'Ahora en: '+(S.groups||[]).find(g=>g.id===c.group).name:'Sin agrupación')}
@@ -996,6 +1004,8 @@ document.addEventListener('click',e=>{
    case 'gpall':c.goalPairs=c.sections.flatMap(s=>isMulti(s)?secVars(c,s).map(id=>s.id+'@'+id):[s.id]);{const y=scrollY;render();scrollTo(0,y)}break;
    case 'gpnone':c.goalPairs=[];{const y=scrollY;render();scrollTo(0,y)}break;
    case 'goal':c.goal=b.dataset.k;{const y=scrollY;render();scrollTo(0,y)}break;
+   case 'mlink':linkSel=null;openLink(b.dataset.id);break;
+   case 'dolink':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplCache.list[+b.dataset.i];if(!b.dataset.ok){linkSel=+b.dataset.i;openLink(c1.id);break}const nm=c1.name;const lost=updateFromTemplate(c1,t);const c2=S.cols.find(x=>x.id===c1.id);c2.name=nm;save();linkSel=null;closeSheet();render();toast(lost?'Listo. '+lost+' figuritas no tenían lugar en la plantilla.':'Listo, ahora usa la plantilla '+t.name);break}
    case 'mupd':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplNewer(c1);if(!t)break;if(!b.dataset.ok){menuUpd=true;openColMenu(c1.id);break}const lost=updateFromTemplate(c1,t);menuUpd=false;closeSheet();render();toast(lost?'Actualizada. '+lost+' figuritas no tenían lugar en la nueva versión.':'Colección actualizada a la versión '+t.version);break}
    case 'colmenu':menuUpd=false;menuDel=false;openColMenu(b.dataset.id);break;
    case 'mnew':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),false);closeSheet();render();toast('Copia nueva lista: '+n.name);break}
