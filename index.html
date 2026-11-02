@@ -103,7 +103,7 @@ h3{font:700 13px/1.2 var(--f-body);letter-spacing:.06em;text-transform:uppercase
 
 /* Secciones */
 .sec{margin-bottom:18px}
-.sec.gap{margin-top:34px;padding-top:18px;border-top:1px dashed var(--line)}
+.sec.gap{margin-top:28px}
 .sechead{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
 .sechead h4{margin:0;flex:1;min-width:0;font:700 17px var(--f-display)}
 .sechead .c{font:600 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
@@ -280,7 +280,7 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <style id="txs"></style>
 
 <script>
-const APP_VER='12';
+const APP_VER='13';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -537,7 +537,7 @@ function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;co
         const e=l.reduce((a,[,,e])=>a+e,0);if(!multi)n+=e;shown+=l.length;
         body+=(multi?vsubHTML(c,vid,e)+(inGoalSec(c,sec,vid)?'':'<span class="vchip meta" style="margin:-2px 0 6px;display:inline-flex">Fuera de tu meta</span>'):'')+grid(l.map(([it,z,e,na])=>repTileHTML(c,sec,it,z,e,na)).join(''))});if(!shown&&!(multi&&body))continue;cnt=n+' rep.'}
     any=true;const v=varOf(c,multi?secVars(c,sec)[0]:sec.variant);
-    out.push({sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span></div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body+(nextId?`<div class="secfoot"><button class="btn sm" data-a="secnext" data-s="${sec.id}" data-n="${nextId}">Listo, siguiente sección ↓</button></div>`:'')}</section>`}})}
+    out.push({sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span></div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body}</section>`}})}
   if(out.length>1)h+=`<nav class="secnav" aria-label="Ir a sección"><div class="secnav-in">${out.map(o=>`<button data-a="goto" data-s="${o.sec.id}" class="${fold[o.sec.id]?'f':''}">${esc(o.sec.name)}</button>`).join('')}</div><button class="ib sm" data-a="foldall" aria-label="Plegar o desplegar todas">${out.every(o=>fold[o.sec.id])?'▾':'▴'}</button></nav>`;
   out.forEach((o,i)=>{h+=o.html(out[i+1]?out[i+1].sec.id:null)});
   if(!any)h+=`<div class="empty">${tab==='rep'?'Todavía no tienes repetidas.':tab==='miss'?'¡No te falta ninguna!':'No hay figuritas que coincidan.'}</div>`;
