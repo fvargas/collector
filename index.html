@@ -252,6 +252,8 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .qb.sm{width:40px;height:40px;font-size:22px}
 .mrow output{text-align:center;font:800 22px var(--f-display);font-variant-numeric:tabular-nums}
 
+.vchip.off{opacity:.45}.vchip.meta{background:color-mix(in oklab,var(--accent) 18%,var(--surface2));color:var(--fg);padding-left:9px}
+.gpairs{display:grid;gap:10px}.gsec b{display:block;font-size:13.5px;margin-bottom:4px}.gsec .vchecks{margin:0}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -305,7 +307,7 @@ function txCls(c,v){const t=texOf(c,v);return t?`tx ${txClass(t,v.color)}${t.ani
 const vStyle=v=>`--vc:${v.color};--on:${onColor(v.color)}`;
 const vLabel=(c,v)=>{const t=texOf(c,v);return (EFFECTS[v.effect]||'')+(t?' + '+t.name:'')};
 function vPreview(c,v,label){return `<span class="tile has v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"><span class="lb">${esc(label)}</span></span>`}
-function ensure(c){if(!c)return c;if(!c.textures)c.textures=defTextures();if(!c.tv){c.variants.forEach(v=>{if(v.effect==='glass'&&!v.texture){v.effect='solid';v.texture='tx-vidrio'}});c.tv=1}return c}
+function ensure(c){if(!c)return c;if(c.goal==='pick'&&!c.goalPairs&&(c.goalVars||[]).length){c.goalPairs=[];c.sections.forEach(s=>{if(isMulti(s))secVars(c,s).forEach(id=>{if(c.goalVars.includes(id))c.goalPairs.push(s.id+'@'+id)});else if(c.goalVars.includes(s.variant))c.goalPairs.push(s.id)})}if(!c.textures)c.textures=defTextures();if(!c.tv){c.variants.forEach(v=>{if(v.effect==='glass'&&!v.texture){v.effect='solid';v.texture='tx-vidrio'}});c.tv=1}return c}
 const KINDS={num:'Numérica',code:'Código',letters:'Letras',labels:'Etiquetas'};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -380,12 +382,16 @@ const GOALS={all:'Todas las variantes',pick:'Elegir variantes',any:'Cualquiera (
 const goalOf=c=>GOALS[c.goal]?c.goal:'all';
 const isMulti=s=>Array.isArray(s.vars)&&s.vars.length>0;
 const secVars=(c,s)=>isMulti(s)?s.vars.filter(id=>c.variants.some(v=>v.id===id)):[];
+const secGoal=(c,s)=>goalOf(c);
+const pairKey=(s,vid)=>isMulti(s)?s.id+'@'+vid:s.id;
+function inGoalSec(c,s,vid){if(goalOf(c)!=='pick')return true;const pr=c.goalPairs||[];return !pr.length||pr.includes(pairKey(s,vid))}
+function goalLabel(c,s){return GOALS[goalOf(c)]}
 function inGoal(c,vid){if(goalOf(c)!=='pick')return true;const gv=(c.goalVars||[]).filter(id=>c.variants.some(v=>v.id===id));return !gv.length||gv.includes(vid)}
 const legacyVid=(s,it)=>it.special?(s.specialVariant||s.variant):s.variant;
 function slotsOf(c,s,it){const k=key(s,it);return isMulti(s)?secVars(c,s).map(vid=>({k:k+'@'+vid,vid})):[{k,vid:legacyVid(s,it)}]}
 const itemKeyOf=k=>{const i=k.indexOf('@');return i<0?k:k.slice(0,i)};
 const vidOfSlot=k=>{const i=k.indexOf('@');return i<0?null:k.slice(i+1)};
-function itemState(c,s,it){const g=goalOf(c);const sl=slotsOf(c,s,it).map(x=>({...x,n:c.counts[x.k]||0,goal:inGoal(c,x.vid)}));
+function itemState(c,s,it){const g=secGoal(c,s);const sl=slotsOf(c,s,it).map(x=>({...x,n:c.counts[x.k]||0,goal:inGoalSec(c,s,x.vid)}));
   const tot=sl.reduce((a,x)=>a+x.n,0);const extras=[];let units,have,missSlots=[];
   if(g==='any'){units=sl.length?1:0;have=tot>0&&units?1:0;const keep=sl.find(x=>x.n>0);sl.forEach(x=>{const e=x===keep?x.n-1:x.n;if(e>0)extras.push({...x,e})})}
   else{const gs=sl.filter(x=>x.goal);units=gs.length;have=gs.filter(x=>x.n>0).length;missSlots=gs.filter(x=>!x.n);sl.forEach(x=>{const e=x.goal?x.n-1:x.n;if(e>0)extras.push({...x,e})})}
@@ -406,8 +412,8 @@ let mq=null;
 function openMulti(ik){const c=col();const {sec,it}=findItem(c,ik);if(!sec||!it)return;mq={ik,vals:{}};slotsOf(c,sec,it).forEach(z=>mq.vals[z.k]=c.counts[z.k]||0);
   const label=sec.kind==='num'?'Figurita '+it.share:it.share;
   sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">${esc(label)}</h2><button class="btn sm" data-a="close">Cerrar</button></div>
-  <p class="muted" style="font-size:13px;margin:2px 0 6px">${esc(sec.name)} · ${GOALS[goalOf(c)]}</p>
-  <div class="mrows">${slotsOf(c,sec,it).map(z=>{const v=varOf(c,z.vid);return `<div class="mrow">${vPreview(c,v,it.app)}<span class="mname"><b>${esc(v.name)}</b><small>${inGoal(c,z.vid)?'':'Fuera de tu meta'}</small></span><button class="qb sm" data-a="mqm" data-k="${esc(z.k)}" aria-label="Quitar ${esc(v.name)}">−</button><output id="mq-${esc(z.vid)}">${mq.vals[z.k]}</output><button class="qb sm" data-a="mqp" data-k="${esc(z.k)}" aria-label="Agregar ${esc(v.name)}">+</button></div>`}).join('')}</div>
+  <p class="muted" style="font-size:13px;margin:2px 0 6px">${esc(sec.name)} · ${esc(goalLabel(c,sec))}</p>
+  <div class="mrows">${slotsOf(c,sec,it).map(z=>{const v=varOf(c,z.vid);return `<div class="mrow">${vPreview(c,v,it.app)}<span class="mname"><b>${esc(v.name)}</b><small>${inGoalSec(c,sec,z.vid)?'':'Fuera de tu meta'}</small></span><button class="qb sm" data-a="mqm" data-k="${esc(z.k)}" aria-label="Quitar ${esc(v.name)}">−</button><output id="mq-${esc(z.vid)}">${mq.vals[z.k]}</output><button class="qb sm" data-a="mqp" data-k="${esc(z.k)}" aria-label="Agregar ${esc(v.name)}">+</button></div>`}).join('')}</div>
   <div class="qacts" style="margin-top:14px"><button class="btn" data-a="close">Cancelar</button><button class="btn pri" data-a="mqok">Confirmar</button></div>`)}
 function migrateSecCounts(c,s,toMulti){const its=items(s);
   if(toMulti){its.forEach(it=>{const k=key(s,it),n=c.counts[k];if(n){const vid=s.vars.includes(legacyVid(s,it))?legacyVid(s,it):s.vars[0];c.counts[k+'@'+vid]=(c.counts[k+'@'+vid]||0)+n;delete c.counts[k]}})}
@@ -462,11 +468,13 @@ function tileHTML(c,sec,it){const n=c.counts[key(sec,it)]||0;const v=varOf(c,it.
   return `<button class="tile ${n?'has':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(key(sec,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${n>1?`<span class="n">×${n}</span>`:''}${it.special&&!n?'<span class="st">★</span>':''}</button>`}
 
 function chips(c,sec){const vs=[];
-  if(isMulti(sec)){secVars(c,sec).forEach(id=>vs.push([varOf(c,id),'']))}
+  if(isMulti(sec)){secVars(c,sec).forEach(id=>vs.push([varOf(c,id),'',!inGoalSec(c,sec,id)]))}
   else{const hasSp=sec.allSpecial||String(sec.specials||'').trim();
     if(!sec.allSpecial)vs.push([varOf(c,sec.variant),'']);
     if(hasSp){const sv=varOf(c,sec.specialVariant||sec.variant);if(sec.allSpecial||sv!==vs[0]?.[0])vs.push([sv,sec.allSpecial?'':'★ '])}}
-  return `<div class="vchips">${vs.map(([v,p])=>`<span class="vchip" style="${esc(vStyle(v))}"><i class="sw v-${v.effect} ${txCls(c,v)}"></i>${p}${esc(v.name)} · ${esc(vLabel(c,v))}</span>`).join('')}</div>`}
+  const outAll=goalOf(c)==='pick'&&(c.goalPairs||[]).length&&(isMulti(sec)?secVars(c,sec).every(id=>!inGoalSec(c,sec,id)):!inGoalSec(c,sec,null));
+  const meta=outAll?`<span class="vchip meta">Fuera de tu meta</span>`:'';
+  return `<div class="vchips">${meta}${vs.map(([v,p,off])=>`<span class="vchip ${off?'off':''}" style="${esc(vStyle(v))}"><i class="sw v-${v.effect} ${txCls(c,v)}"></i>${p}${esc(v.name)} · ${esc(vLabel(c,v))}</span>`).join('')}</div>`}
 function vsubHTML(c,vid,n){const v=varOf(c,vid);return `<div class="vsub" style="${esc(vStyle(v))}"><i class="sw v-${v.effect} ${txCls(c,v)}"></i>${esc(v.name)}<span class="muted">${n}</span></div>`}
 function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;const g=goalOf(c);const {used,act}=activeVar(c);
   let h=`<div class="sum">${ring(p)}<div style="min-width:0"><div class="big">${s.h} de ${s.t}</div><div class="kv"><span>Faltan <b>${s.t-s.h}</b></span><span>Normales <b>${s.nh}/${s.nt}</b></span><span>Especiales <b>${s.sh}/${s.st}</b></span><span>Repetidas <b>${s.rep}</b></span>${used.length?`<span>Meta <b>${GOALS[g]}</b></span>`:''}</div></div></div>
@@ -481,7 +489,7 @@ function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;co
     const wide=sec.kind==='labels'?'wide':'';const grid=t=>`<div class="grid ${wide}">${t}</div>`;let body='',cnt='';
     if(tab==='album'){if(!list.length)continue;body=grid(list.map(it=>multi?mtileHTML(c,sec,it):tileHTML(c,sec,it)).join(''));cnt=H+' / '+U}
     else if(tab==='miss'){
-      if(g==='any'||!multi){const l=list.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0});if(!l.length)continue;
+      const g=secGoal(c,sec);if(g==='any'||!multi){const l=list.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0});if(!l.length)continue;
         body=grid(l.map(it=>multi?mtileHTML(c,sec,it):slotTileHTML(c,sec,it,st.get(it).sl[0],0,0)).join(''));cnt=l.length+' faltan'}
       else{let n=0;secVars(c,sec).forEach(vid=>{const l=list.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid));if(!l.length)return;n+=l.length;
           body+=vsubHTML(c,vid,l.length)+grid(l.map(it=>slotTileHTML(c,sec,it,st.get(it).missSlots.find(m=>m.vid===vid),0,0)).join(''))});if(!n)continue;cnt=n+' faltan'}}
@@ -516,13 +524,17 @@ function varRow(c,v,i){const op=openVar===v.id;const o=(obj,cur)=>Object.entries
   <select id="v-e-${v.id}" data-v="${i}" data-f="effect" aria-label="Acabado">${o(EFFECTS,v.effect)}</select>
   <select id="v-t-${v.id}" data-v="${i}" data-f="texture" aria-label="Brillo"><option value="">Sin brillo</option>${c.textures.map(t=>`<option value="${t.id}" ${t.id===v.texture?'selected':''}>Brillo: ${esc(t.name)}</option>`).join('')}</select>
   ${c.variants.length>1?`<div class="acts" style="grid-column:1/-1">${delBtn('delvar',i,'Quitar variante')}</div>`:''}</div>`:''}</div></div>`}
+function pairsHTML(c){const pr=new Set(c.goalPairs||[]);const n=c.sections.reduce((a,s)=>a+(isMulti(s)?secVars(c,s).length:1),0);
+  return `<div class="acts" style="margin:2px 0 8px"><span class="muted" style="font-size:12.5px;align-self:center;flex:1">${pr.size?pr.size+' de '+n+' marcadas':'Nada marcado: cuenta todo'}</span><button class="btn sm" data-a="gpall">Todas</button><button class="btn sm" data-a="gpnone">Ninguna</button></div>
+  <div class="gpairs">${c.sections.map((s,i)=>{const chip=(k,v,label)=>`<label class="vck"><input type="checkbox" id="gp-${esc(k)}" data-gpair="${esc(k)}" ${pr.has(k)?'checked':''}>${v?`<i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>`:''}${esc(label)}</label>`;
+    return `<div class="gsec"><b>${esc(s.name)}</b><div class="vchecks">${isMulti(s)?secVars(c,s).map(id=>{const v=varOf(c,id);return chip(s.id+'@'+id,v,v.name)}).join(''):chip(s.id,varOf(c,s.variant),'Sin variante')}</div></div>`}).join('')}</div>`}
 const layoutOf=s=>s.shareLayout||(s.kind==='labels'?'lines':'inline');
 function editHTML(){const c=col();const sh=c.share;
   let h=etabsHTML();if(etab==='secs'){h+=`<div class="card"><h3 style="margin-bottom:10px">Álbum</h3><div class="row"><div class="f"><label for="c-name">Nombre</label><input id="c-name" data-c="name" value="${esc(c.name)}"></div><div class="f"><label for="c-ed">Editorial</label><input id="c-ed" data-c="editorial" value="${esc(c.editorial)}"></div></div>
   <div class="grp"><span class="lbl">Meta de esta colección</span><div class="seg" style="margin-top:6px">${Object.entries(GOALS).map(([k,l])=>`<button aria-pressed="${goalOf(c)===k}" data-a="goal" data-k="${k}">${l}</button>`).join('')}</div>
-  <p class="muted" style="font-size:12.5px;margin:-4px 0 6px">${{all:'Necesitas cada número en cada variante en la que sale.',pick:'Solo cuentan las variantes que marques. Las demás pasan a repetidas para intercambiar.',any:'Basta con tener cada número en cualquier variante. Las copias extra, de cualquier color, son repetidas.'}[goalOf(c)]}</p>
-  ${goalOf(c)==='pick'?`<div class="vchecks">${c.variants.map(v=>`<label class="vck"><input type="checkbox" id="gv-${v.id}" data-goalv="${v.id}" ${(c.goalVars||[]).includes(v.id)?'checked':''}><i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>${esc(v.name)}</label>`).join('')}</div>`:''}
-  <p class="muted" style="font-size:12px;margin:6px 0 0">La meta se aplica a las secciones marcadas como "Sale en varias variantes".${goalOf(c)==='pick'?' En las de una sola variante, cuenta si esa variante está marcada.':''}</p></div></div>`;}
+  <p class="muted" style="font-size:12.5px;margin:-4px 0 6px">${{all:'Necesitas cada número en cada variante en la que sale.',pick:'Marca qué secciones y variantes quieres completar. Lo que no marques no cuenta para tu avance y pasa a repetidas para intercambiar. Si no marcas nada, cuenta todo.',any:'Basta con tener cada número en cualquier variante. Las copias extra, de cualquier color, son repetidas.'}[goalOf(c)]}</p>
+  ${goalOf(c)==='pick'?pairsHTML(c):''}
+  ${goalOf(c)==='pick'?'':'<p class="muted" style="font-size:12px;margin:6px 0 0">La meta se aplica a las secciones marcadas como "Sale en varias variantes".</p>'}</div></div>`;}
   if(etab==='vars'){h+=`<div class="card"><div class="sechd"><h3 style="flex:1">Variantes (${c.variants.length})</h3><button class="btn sm pri" data-a="addvar">+ Variante</button></div>
   <p class="muted" style="font-size:13px;margin:0 0 6px">Cada variante es un tipo de figurita: color, acabado y brillo. Defínelas aquí y asígnalas en cada sección. Toca una para editarla.</p>
   ${c.variants.map((v,i)=>varRow(c,v,i)).join('')}</div>`;}
@@ -538,7 +550,8 @@ function editHTML(){const c=col();const sh=c.share;
     if(s.kind==='letters')h+=`<div class="f"><label for="s${i}-l">Letras, separadas por coma</label><input id="s${i}-l" ${p} data-f="letters" value="${esc(s.letters)}" placeholder="A,B,C"></div><button class="btn sm" style="margin-bottom:10px" data-a="az" data-i="${i}">Rellenar A–Z</button>`;
     if(s.kind==='labels')h+=`<div class="f"><label for="s${i}-lb">Una por línea · <code>texto en la app | texto al compartir</code></label><textarea id="s${i}-lb" ${p} data-f="labels">${esc((s.labels||[]).map(l=>l.app===l.share?l.app:l.app+' | '+l.share).join('\n'))}</textarea></div>`;
     h+=`<div class="grp"><span class="lbl">Variantes de esta sección</span><div class="seg" style="margin-top:6px"><button aria-pressed="${!isMulti(s)}" data-a="secmulti" data-i="${i}" data-k="0">Una variante</button><button aria-pressed="${isMulti(s)}" data-a="secmulti" data-i="${i}" data-k="1">Sale en varias variantes</button></div>
-    ${isMulti(s)?`<p class="muted" style="font-size:12.5px;margin:-4px 0 6px">Cada figurita de esta sección se cuenta por separado en cada variante marcada.</p><div class="vchecks">${c.variants.map(v=>`<label class="vck"><input type="checkbox" id="s${i}-vc-${v.id}" data-s="${i}" data-varchk="${v.id}" ${s.vars.includes(v.id)?'checked':''}><i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>${esc(v.name)}</label>`).join('')}</div><div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial?'disabled':''}></div></div>`:`<div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial?'disabled':''}></div><div class="f"><label for="s${i}-v">Variante normal</label><select id="s${i}-v" ${p} data-f="variant">${varOpts(c,s.variant)}</select></div><div class="f"><label for="s${i}-sv">Variante especial</label><select id="s${i}-sv" ${p} data-f="specialVariant">${varOpts(c,s.specialVariant,true)}</select></div></div>`}
+    ${isMulti(s)?`<p class="muted" style="font-size:12.5px;margin:-4px 0 6px">Cada figurita de esta sección se cuenta por separado en cada variante marcada.</p><div class="vchecks">${c.variants.map(v=>`<label class="vck"><input type="checkbox" id="s${i}-vc-${v.id}" data-s="${i}" data-varchk="${v.id}" ${s.vars.includes(v.id)?'checked':''}><i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>${esc(v.name)}</label>`).join('')}</div>
+    <div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial?'disabled':''}></div></div>`:`<div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial?'disabled':''}></div><div class="f"><label for="s${i}-v">Variante normal</label><select id="s${i}-v" ${p} data-f="variant">${varOpts(c,s.variant)}</select></div><div class="f"><label for="s${i}-sv">Variante especial</label><select id="s${i}-sv" ${p} data-f="specialVariant">${varOpts(c,s.specialVariant,true)}</select></div></div>`}
     <label class="chk"><input type="checkbox" id="s${i}-all" ${p} data-f="allSpecial" ${s.allSpecial?'checked':''}><span>Todas son especiales</span></label></div>
     <div class="grp"><span class="lbl">Dónde aparece</span>
     <label class="chk"><input type="checkbox" id="s${i}-sa" ${p} data-f="showApp" ${s.showApp?'checked':''}><span>Mostrar en la app<small>Si la apagas, se oculta de la grilla pero sigue contando en el progreso.</small></span></label>
@@ -572,7 +585,7 @@ function myLists(c){const nd=myNeeds(c);return {miss:nd.slot.size+nd.item.size,r
 function encodeTrade(c){const nd=myNeeds(c);const g=goalOf(c);
   return 'FIG2|'+safeNm(c.name)+'|'+g+'|'+c.sections.map(s=>{const its=items(s);const ents=[];
     if(!isMulti(s)){const miss=[],rep=[];its.forEach(it=>{const k=key(s,it);if(nd.slot.has(k)||nd.item.has(k))miss.push(it.num);if(nd.extra.has(k))rep.push(it.num)});ents.push(':'+numRanges(miss)+':'+numRanges(rep))}
-    else{if(g==='any'){const miss=its.filter(it=>nd.item.has(key(s,it))).map(it=>it.num);if(miss.length)ents.push('*:'+numRanges(miss)+':')}
+    else{if(secGoal(c,s)==='any'){const miss=its.filter(it=>nd.item.has(key(s,it))).map(it=>it.num);if(miss.length)ents.push('*:'+numRanges(miss)+':')}
       secVars(c,s).forEach(vid=>{const miss=[],rep=[];its.forEach(it=>{const k=key(s,it)+'@'+vid;if(nd.slot.has(k))miss.push(it.num);if(nd.extra.has(k))rep.push(it.num)});if(miss.length||rep.length)ents.push(safeNm(varOf(c,vid).name)+':'+numRanges(miss)+':'+numRanges(rep))})}
     return safeNm(s.name)+'~'+ents.join('~')}).join('|')}
 function secByName(c,name){const n=normTxt(name);if(!n)return null;
@@ -694,7 +707,7 @@ function shareText(c,o){const sh=c.share;const lines=[];const g=goalOf(c);
   const block=(title,kind)=>{const rows=[];let total=0;const secs=c.sections.filter(s=>s.showShare);
     secs.forEach((s,idx)=>{const its=items(s);const multi=isMulti(s);const groups=[];const st=new Map(its.map(it=>[it,itemState(c,s,it)]));
       if(kind==='miss'){
-        if(g==='any'||!multi){const l=its.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0}).map(it=>({it,e:1}));if(l.length)groups.push([null,l])}
+        const g=secGoal(c,s);if(g==='any'||!multi){const l=its.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0}).map(it=>({it,e:1}));if(l.length)groups.push([null,l])}
         else secVars(c,s).forEach(vid=>{const l=its.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid)).map(it=>({it,e:1}));if(l.length)groups.push([varOf(c,vid).name,l])})}
       else{if(!multi){const l=[];its.forEach(it=>{const e=st.get(it).extras.reduce((a,z)=>a+z.e,0);if(e>0)l.push({it,e})});if(l.length)groups.push([null,l])}
         else secVars(c,s).forEach(vid=>{const l=[];its.forEach(it=>{const z=st.get(it).extras.find(z=>z.vid===vid);if(z)l.push({it,e:z.e})});if(l.length)groups.push([varOf(c,vid).name,l])})}
@@ -832,7 +845,7 @@ document.addEventListener('click',e=>{
    case 'addtx':openTx=uid();c.textures.push({id:openTx,name:'Brillo '+(c.textures.length+1),shape:'bubbles',count:8,size:'m',palette:'rainbow',anim:true});save();{const y=scrollY;render();scrollTo(0,y)}break;
    case 'deltx':if(b.dataset.ok){const t=c.textures.splice(i,1)[0];c.variants.forEach(v=>{if(v.texture===t.id)v.texture=null});armed=null;save();const y=scrollY;render();scrollTo(0,y)}break;
    case 'addvar':openVar=uid();c.variants.push({id:openVar,name:'Variante '+(c.variants.length+1),color:'#2fa36b',effect:'solid'});save();render();scrollTo(0,document.body.scrollHeight);break;
-   case 'delvar':if(!b.dataset.ok)break;{armed=null;const v=c.variants.splice(i,1)[0];c.sections.forEach(s=>{if(s.variant===v.id)s.variant=c.variants[0].id;if(s.specialVariant===v.id)s.specialVariant=null;if(isMulti(s)){s.vars=s.vars.filter(id=>id!==v.id);if(!s.vars.length)s.vars=[c.variants[0].id]}});if(c.goalVars)c.goalVars=c.goalVars.filter(id=>id!==v.id);save();render();break}
+   case 'delvar':if(!b.dataset.ok)break;{armed=null;const v=c.variants.splice(i,1)[0];c.sections.forEach(s=>{if(s.variant===v.id)s.variant=c.variants[0].id;if(s.specialVariant===v.id)s.specialVariant=null;if(isMulti(s)){s.vars=s.vars.filter(id=>id!==v.id);if(!s.vars.length)s.vars=[c.variants[0].id]}});if(c.goalVars)c.goalVars=c.goalVars.filter(id=>id!==v.id);if(c.goalPairs)c.goalPairs=c.goalPairs.filter(k=>!k.endsWith('@'+v.id));save();render();break}
    case 'addsec':c.sections.push(newSection({variant:c.variants[0]?.id}));save();render();scrollTo(0,document.body.scrollHeight);break;
    case 'layout':c.sections[i].shareLayout=b.dataset.k;save();render();break;
    case 'repcount':c.share.repCount=b.checked;save();openShare();break;
@@ -845,7 +858,7 @@ document.addEventListener('click',e=>{
    case 'down':if(i<c.sections.length-1){[c.sections[i+1],c.sections[i]]=[c.sections[i],c.sections[i+1]];save();render()}break;
    case 'arm':{armed=b.dataset.id;const y=scrollY;render();scrollTo(0,y)}break;
    case 'disarm':{armed=null;const y=scrollY;render();scrollTo(0,y)}break;
-   case 'delsec':if(b.dataset.ok){c.sections.splice(i,1);armed=null;save();render()}break;
+   case 'delsec':if(b.dataset.ok){const ds0=c.sections.splice(i,1)[0];if(c.goalPairs)c.goalPairs=c.goalPairs.filter(k=>k!==ds0.id&&!k.startsWith(ds0.id+'@'));armed=null;save();render()}break;
    case 'delcol':if(b.dataset.ok){S.cols=S.cols.filter(x=>x.id!==c.id);draft=null;draftNew=false;armed=null;save();view='home';cur=null;render();toast('Colección eliminada')}break;
    case 'sort':S.sort=b.dataset.k;if(S.sort!=='manual')reorder=false;save();render();break;
    case 'reorder':reorder=!reorder;render();break;
@@ -881,6 +894,9 @@ document.addEventListener('click',e=>{
      if(on&&!isMulti(sx)){sx.vars=[sx.variant,sx.specialVariant].filter((id,j,arr)=>id&&arr.indexOf(id)===j&&c.variants.some(v=>v.id===id));if(!sx.vars.length)sx.vars=[c.variants[0].id];migrateSecCounts(c,sx,true);toast('Tus figuritas marcadas pasaron a '+varOf(c,sx.vars[0]).name+'. Marca las demás variantes en que sale.')}
      else if(!on&&isMulti(sx)){if(!sx.vars.includes(sx.variant))sx.variant=sx.vars[0];migrateSecCounts(c,sx,false);sx.vars=null;toast('Se conservaron las figuritas de '+varOf(c,sx.variant).name)}
      {const y=scrollY;render();scrollTo(0,y)}break}
+   case 'secgoal':{const sx=c.sections[i];sx.goal=b.dataset.k||null;if(sx.goal==='pick'&&!Array.isArray(sx.goalVars))sx.goalVars=[];const y=scrollY;render();scrollTo(0,y);break}
+   case 'gpall':c.goalPairs=c.sections.flatMap(s=>isMulti(s)?secVars(c,s).map(id=>s.id+'@'+id):[s.id]);{const y=scrollY;render();scrollTo(0,y)}break;
+   case 'gpnone':c.goalPairs=[];{const y=scrollY;render();scrollTo(0,y)}break;
    case 'goal':c.goal=b.dataset.k;{const y=scrollY;render();scrollTo(0,y)}break;
    case 'colmenu':menuDel=false;openColMenu(b.dataset.id);break;
    case 'mnew':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),false);closeSheet();render();toast('Copia nueva lista: '+n.name);break}
@@ -896,6 +912,8 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{const ds=e.target.dataset||{};
   if(ds.varchk&&view==='edit'){const c=col(),sx=c.sections[+ds.s];const cur=new Set(sx.vars||[]);e.target.checked?cur.add(ds.varchk):cur.delete(ds.varchk);
     if(!cur.size){e.target.checked=true;toast('Deja marcada al menos una variante');return}sx.vars=c.variants.map(v=>v.id).filter(id=>cur.has(id));return}
+  if(ds.sgoalv&&view==='edit'){const c=col(),sx=c.sections[+ds.s];const cur=new Set(sx.goalVars||[]);e.target.checked?cur.add(ds.sgoalv):cur.delete(ds.sgoalv);sx.goalVars=c.variants.map(v=>v.id).filter(id=>cur.has(id));return}
+  if(ds.gpair&&view==='edit'){const c=col();const cur=new Set(c.goalPairs||[]);e.target.checked?cur.add(ds.gpair):cur.delete(ds.gpair);c.goalPairs=[...cur];const y=scrollY;render();scrollTo(0,y);return}
   if(ds.goalv&&view==='edit'){const c=col();const cur=new Set(c.goalVars||[]);e.target.checked?cur.add(ds.goalv):cur.delete(ds.goalv);c.goalVars=c.variants.map(v=>v.id).filter(id=>cur.has(id));return}
   if(e.target.dataset&&e.target.dataset.gname){const g=S.groups.find(x=>x.id===e.target.dataset.gname);if(g){g.name=e.target.value;save();if(view==='home')document.getElementById('main').innerHTML=homeHTML()}return}const el=e.target,c=col();
   if(el.id==='q'){q=el.value;const pos=el.selectionStart;document.getElementById('main').innerHTML=albumHTML();const n=document.getElementById('q');n.focus();n.setSelectionRange(pos,pos);return}
