@@ -49,6 +49,38 @@ Los datos se guardan en cada navegador por separado, así que la app instalada e
 
 Tus figuritas no se pierden al actualizar.
 
+## Plantillas (para que otros creen su álbum en un toque)
+
+La carpeta `plantillas/` del repositorio guarda álbumes listos para usar. En la app, **Nueva colección → Desde una plantilla** muestra todas las que estén ahí.
+
+```
+plantillas/
+  index.json          ← lista de plantillas
+  anime-world.json    ← una plantilla
+```
+
+`index.json` solo lista los archivos:
+
+```json
+{ "plantillas": ["anime-world.json", "mundial-2026.json"] }
+```
+
+### Crear o actualizar una plantilla
+
+1. En la app, arma o ajusta el álbum como quieres que lo reciban los demás.
+2. ⋮ de la colección → **Exportar configuración** → marca **Exportar como plantilla** → **Descargar archivo .json**. El archivo ya sale con el nombre correcto y con la versión subida en 1.
+3. En GitHub, entra a la carpeta `plantillas/` → **Add file → Upload files** → sube el archivo (reemplaza el anterior) → **Commit changes**.
+4. Si es una plantilla **nueva**, abre `plantillas/index.json` → lápiz ✎ → agrega su nombre a la lista → **Commit changes**.
+
+No hace falta tocar `sw.js` para actualizar plantillas.
+
+### Qué ven los demás
+
+- Quien creó su álbum desde la plantilla ve **"Nueva versión"** en la tarjeta de la colección cuando subes una versión mayor.
+- Con ⋮ → **Actualizar plantilla** reciben tus cambios (secciones, variantes, brillos) y conservan sus figuritas marcadas, su nombre y su meta.
+- Si borras una sección o un número de la plantilla, las figuritas marcadas ahí se pierden al actualizar. La app avisa cuántas.
+- Para no romper nada, no cambies el nombre de las secciones entre versiones si puedes evitarlo.
+
 ## Respaldo
 
 Tus datos viven en el navegador del celular. Si borras los datos de Chrome o desinstalas la app, se pierden. De vez en cuando entra a **Importar y exportar → Descargar archivo .json** y guarda ese archivo (en Drive o enviándotelo por WhatsApp).

@@ -1,6 +1,6 @@
 // Funciona sin internet: guarda la app y las fuentes la primera vez que se abre.
 // Cuando cambies index.html, sube el número de VERSION para que los celulares descarguen la nueva.
-const VERSION = 'figuritas-v7';
+const VERSION = 'figuritas-v10';
 const APP = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -23,6 +23,13 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(req).then(r => {
       const copy = r.clone(); caches.open(VERSION).then(c => c.put('./index.html', copy)); return r;
     }).catch(() => caches.match('./index.html')));
+    return;
+  }
+
+  // Plantillas: primero internet (para ver versiones nuevas), si no hay, la copia guardada.
+  if (url.origin === location.origin && url.pathname.includes('/plantillas/')) {
+    e.respondWith(fetch(req).then(r => { const copy = r.clone(); if (r.ok) caches.open(VERSION).then(c => c.put(req, copy)); return r; })
+      .catch(() => caches.match(req, { ignoreSearch: true })));
     return;
   }
 

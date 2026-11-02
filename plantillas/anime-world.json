@@ -1,0 +1,245 @@
+{
+  "formato": "album-figuritas",
+  "version": 2,
+  "name": "Anime World",
+  "editorial": "Flash Edition",
+  "variants": [
+    {
+      "id": "vb",
+      "name": "Básica",
+      "color": "#6f7d95",
+      "effect": "solid"
+    },
+    {
+      "id": "ve",
+      "name": "Especial dorada",
+      "color": "#e2a33b",
+      "effect": "metal",
+      "texture": "tx-escarcha"
+    },
+    {
+      "id": "vl",
+      "name": "Vidrio celeste",
+      "color": "#6cc8e0",
+      "effect": "solid",
+      "texture": "tx-vidrio"
+    },
+    {
+      "id": "vt",
+      "name": "Azul sectorizada",
+      "color": "#3f7be3",
+      "effect": "solid"
+    },
+    {
+      "id": "vj",
+      "name": "Jumbo holo",
+      "color": "#b66cf6",
+      "effect": "holo"
+    },
+    {
+      "id": "vg",
+      "name": "Verde",
+      "color": "#2fa36b",
+      "effect": "solid"
+    }
+  ],
+  "share": {
+    "title": "📒 {nombre}",
+    "missTitle": "❌ Faltantes ({n}):",
+    "repTitle": "🔁 Repetidas ({n}):",
+    "sep": ", ",
+    "ranges": false,
+    "incMiss": true,
+    "incRep": true,
+    "secName": true,
+    "nameOwnLine": true,
+    "showVariant": false,
+    "repCount": false
+  },
+  "counts": {},
+  "sections": [
+    {
+      "id": "sfyqjlk",
+      "name": "Lista Básicas",
+      "shareName": "",
+      "emoji": "",
+      "kind": "num",
+      "prefix": "",
+      "from": 1,
+      "to": 216,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "vb",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": false,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "wolr136",
+      "name": "Especiales E",
+      "shareName": "",
+      "emoji": "",
+      "kind": "code",
+      "prefix": "E",
+      "from": 1,
+      "to": 36,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "ve",
+      "specialVariant": "ve",
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "w0pub7w",
+      "name": "Especiales L",
+      "shareName": "",
+      "emoji": "",
+      "kind": "code",
+      "prefix": "L",
+      "from": 1,
+      "to": 9,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "vl",
+      "specialVariant": "vl",
+      "showApp": true,
+      "showShare": true,
+      "gapApp": false,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "2zqy4fe",
+      "name": "Lista Sectorizadas T",
+      "shareName": "",
+      "emoji": "",
+      "kind": "code",
+      "prefix": "T",
+      "from": 1,
+      "to": 18,
+      "letters": "",
+      "labels": [],
+      "specials": "",
+      "allSpecial": false,
+      "variant": "vt",
+      "specialVariant": null,
+      "showApp": true,
+      "showShare": true,
+      "gapApp": false,
+      "breakShare": true,
+      "shareLayout": null
+    },
+    {
+      "id": "7pwdka9",
+      "name": "Lista Jumbos",
+      "shareName": "",
+      "emoji": "⭐",
+      "kind": "labels",
+      "prefix": "",
+      "from": 1,
+      "to": 10,
+      "letters": "",
+      "labels": [
+        {
+          "app": "1) LUFFY G4",
+          "share": "1) MONKEY D. LUFFY (GEAR4)"
+        },
+        {
+          "app": "2) MADARA",
+          "share": "2) MADARA UCHIHA"
+        },
+        {
+          "app": "3) GIOVANNI",
+          "share": "3) GIOVANNI"
+        },
+        {
+          "app": "4) SAORI KIDO",
+          "share": "4) SAORI KIDO"
+        },
+        {
+          "app": "5) NEO QUEEN",
+          "share": "5) NEO QUEEN SERENITY"
+        },
+        {
+          "app": "6) VEGA",
+          "share": "6) VEGA ULTRA(EGO)"
+        }
+      ],
+      "specials": "",
+      "allSpecial": true,
+      "variant": "vj",
+      "specialVariant": "vj",
+      "showApp": true,
+      "showShare": true,
+      "gapApp": true,
+      "breakShare": true,
+      "shareLayout": null
+    }
+  ],
+  "tv": 1,
+  "textures": [
+    {
+      "id": "tx-vidrio",
+      "name": "Vidrio",
+      "shape": "shards",
+      "count": 22,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-laser",
+      "name": "Láser",
+      "shape": "lines",
+      "count": 14,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-estrella",
+      "name": "Estrella",
+      "shape": "stars",
+      "count": 12,
+      "size": "m",
+      "palette": "rainbow",
+      "anim": true
+    },
+    {
+      "id": "tx-escarcha",
+      "name": "Escarcha",
+      "shape": "dots",
+      "count": 120,
+      "size": "s",
+      "palette": "gold",
+      "anim": true
+    },
+    {
+      "id": "tx-burbuja",
+      "name": "Burbuja",
+      "shape": "bubbles",
+      "count": 8,
+      "size": "m",
+      "palette": "white",
+      "anim": false
+    }
+  ],
+  "plantilla": {
+    "id": "anime-world",
+    "version": 1,
+    "descripcion": "Álbum Anime World de Flash Edition: básicas, especiales E y L, sectorizadas T y jumbos."
+  }
+}
