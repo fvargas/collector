@@ -286,6 +286,8 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .tplic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--accent);color:var(--accent-fg);font:800 16px var(--f-display);flex:none}
 .tpln{flex:1;min-width:0}.tpln b{display:block}.tpln small{color:var(--muted);font-size:12.5px}
 .tplgrp .menu{padding:0 12px}
+.mrowinfo{display:flex;gap:14px;align-items:center;padding:14px 2px;border-top:1px solid var(--line);opacity:.7}.mrowinfo b{display:block}.mrowinfo small{display:block;color:var(--muted);font-size:12.5px}
+.sheet pre.wa{font-family:var(--f-body);font-size:14px;line-height:1.5}.sheet pre.wa b{font-weight:700}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -298,7 +300,11 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <style id="txs"></style>
 
 <script>
-const APP_VER='19';
+function waHTML(t){return esc(t).split('\n').map(l=>l.replace(/(^|[\s(])\*([^*\n]*[^*\s\n])\*(?=$|[\s.,:;!?)])/g,'$1<b>$2</b>').replace(/(^|[\s(])_([^_\n]*[^_\s\n])_(?=$|[\s.,:;!?)])/g,'$1<i>$2</i>').replace(/(^|[\s(])~([^~\n]*[^~\s\n])~(?=$|[\s.,:;!?)])/g,'$1<s>$2</s>')).join('\n')}
+const shRaw=()=>{const e=document.getElementById('shtxt');return e?(e.dataset.raw!=null?e.dataset.raw:e.textContent):''};
+const appLink=()=>{try{return window.IS_PWA?location.origin+location.pathname.replace(/index\.html$/,''):''}catch(e){return ''}};
+const vShare=v=>v&&(v.shareName||v.name)||'';
+const APP_VER='21';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -342,7 +348,7 @@ function txCls(c,v){const t=texOf(c,v);return t?`tx ${txClass(t,v.color)}${t.ani
 const vStyle=v=>`--vc:${v.color};--on:${onColor(v.color)}`;
 const vLabel=(c,v)=>{const t=texOf(c,v);return (EFFECTS[v.effect]||'')+(t?' + '+t.name:'')};
 function vPreview(c,v,label){return `<span class="tile has v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"><span class="lb">${esc(label)}</span></span>`}
-function ensure(c){if(!c)return c;if(c.goal==='pick'&&!c.goalPairs&&(c.goalVars||[]).length){c.goalPairs=[];c.sections.forEach(s=>{if(isMulti(s))secVars(c,s).forEach(id=>{if(c.goalVars.includes(id))c.goalPairs.push(s.id+'@'+id)});else if(c.goalVars.includes(s.variant))c.goalPairs.push(s.id)})}if(!c.textures)c.textures=defTextures();if(!c.tv){c.variants.forEach(v=>{if(v.effect==='glass'&&!v.texture){v.effect='solid';v.texture='tx-vidrio'}});c.tv=1}return c}
+function ensure(c){if(!c)return c;{const d=defShare();c.share=c.share||d;for(const k in d)if(!(k in c.share))c.share[k]=d[k]}if(c.goal==='pick'&&!c.goalPairs&&(c.goalVars||[]).length){c.goalPairs=[];c.sections.forEach(s=>{if(isMulti(s))secVars(c,s).forEach(id=>{if(c.goalVars.includes(id))c.goalPairs.push(s.id+'@'+id)});else if(c.goalVars.includes(s.variant))c.goalPairs.push(s.id)})}if(!c.textures)c.textures=defTextures();if(!c.tv){c.variants.forEach(v=>{if(v.effect==='glass'&&!v.texture){v.effect='solid';v.texture='tx-vidrio'}});c.tv=1}return c}
 const KINDS={num:'Numérica',code:'Código',letters:'Letras',labels:'Etiquetas'};
 const uid=()=>Math.random().toString(36).slice(2,9);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -350,7 +356,7 @@ const clean=s=>String(s??'').replace(/[\r\n\u2028\u2029\t]+/g,' ').replace(/\s+/
 
 /* ---------- Datos ---------- */
 function newSection(o={}){return Object.assign({id:uid(),name:'Nueva sección',shareName:'',emoji:'',kind:'num',prefix:'',from:1,to:10,letters:'',labels:[],specials:'',allSpecial:false,variant:null,specialVariant:null,showApp:true,showShare:true,gapApp:false,breakShare:true,shareLayout:null},o)}
-function defShare(){return {title:'📒 {nombre}',missTitle:'❌ Faltantes ({n}):',repTitle:'🔁 Repetidas ({n}):',sep:', ',ranges:false,incMiss:true,incRep:true,secName:true,nameOwnLine:true,showVariant:false,repCount:false}}
+function defShare(){return {title:'📒 {nombre}',missTitle:'❌ Faltantes ({n}):',repTitle:'🔁 Repetidas ({n}):',sep:', ',ranges:false,incMiss:true,incRep:true,secName:true,nameOwnLine:true,showVariant:false,repCount:false,bold:true,gapGroups:true,footer:'📲 Arma tu álbum aquí: {enlace}'}}
 function seedAnime(){
   const V=[{id:'vb',name:'Básica',color:'#6f7d95',effect:'solid'},{id:'ve',name:'Especial dorada',color:'#e2a33b',effect:'metal',texture:'tx-escarcha'},{id:'vl',name:'Vidrio celeste',color:'#6cc8e0',effect:'solid',texture:'tx-vidrio'},{id:'vt',name:'Azul sectorizada',color:'#3f7be3',effect:'solid'},{id:'vj',name:'Jumbo holo',color:'#b66cf6',effect:'holo'},{id:'vg',name:'Verde',color:'#2fa36b',effect:'solid'}];
   const J=[['1) LUFFY G4','1) MONKEY D. LUFFY (GEAR4)'],['2) MADARA','2) MADARA UCHIHA'],['3) GIOVANNI','3) GIOVANNI'],['4) SAORI KIDO','4) SAORI KIDO'],['5) NEO QUEEN','5) NEO QUEEN SERENITY'],['6) VEGA','6) VEGA ULTRA(EGO)']];
@@ -593,6 +599,7 @@ const varSum=(c,v)=>{const u=usedBy(c,v);return vLabel(c,v)+' · '+(u.length?u.j
 function varRow(c,v,i){const op=openVar===v.id;const o=(obj,cur)=>Object.entries(obj).map(([k,l])=>`<option value="${k}" ${k===cur?'selected':''}>${l}</option>`).join('');
   return `<div class="var acc">${vPreview(c,v,i+1)}<div style="min-width:0"><button class="acch" data-a="vtoggle" data-id="${v.id}" aria-expanded="${op}"><span><b>${esc(v.name)}</b><small>${esc(varSum(c,v))}</small></span><span class="chev">${op?'▴':'▾'}</span></button>
   ${op?`<div class="vf" style="margin-top:8px"><input type="text" id="v-n-${v.id}" data-v="${i}" data-f="name" value="${esc(v.name)}" aria-label="Nombre de la variante"><input type="color" id="v-c-${v.id}" data-v="${i}" data-f="color" value="${esc(v.color)}" aria-label="Color">
+  <input type="text" id="v-s-${v.id}" data-v="${i}" data-f="shareName" value="${esc(v.shareName||'')}" placeholder="Nombre al compartir, ej: Verde🟢 escarcha✨" aria-label="Nombre al compartir" style="grid-column:1/-1">
   <select id="v-e-${v.id}" data-v="${i}" data-f="effect" aria-label="Acabado">${o(EFFECTS,v.effect)}</select>
   <select id="v-t-${v.id}" data-v="${i}" data-f="texture" aria-label="Brillo"><option value="">Sin brillo</option>${c.textures.map(t=>`<option value="${t.id}" ${t.id===v.texture?'selected':''}>Brillo: ${esc(t.name)}</option>`).join('')}</select>
   ${c.variants.length>1?`<div class="acts" style="grid-column:1/-1">${delBtn('delvar',i,'Quitar variante')}</div>`:''}</div>`:''}</div></div>`}
@@ -640,7 +647,12 @@ function editHTML(){const c=col();const sh=c.share;
   <label class="chk"><input type="checkbox" id="sh-nl" data-sh="nameOwnLine" ${sh.nameOwnLine?'checked':''}><span>Nombre de sección en su propia línea<small>Las figuritas empiezan en la línea siguiente</small></span></label>
   <label class="chk"><input type="checkbox" id="sh-rcx" data-sh="repCount" ${sh.repCount?'checked':''}><span>Indicar la cantidad de cada repetida al compartir<small>Apagado: 5, 12, E3 · Encendido: 5 (x2), 12, E3 (x3)</small></span></label>
   <label class="chk"><input type="checkbox" id="sh-sv" data-sh="showVariant" ${sh.showVariant?'checked':''}><span>Indicar la variante junto al nombre<small>Ej: Lista Sectorizadas T (Azul sectorizada):</small></span></label>
-  <label class="chk"><input type="checkbox" id="sh-rg" data-sh="ranges" ${sh.ranges?'checked':''}><span>Agrupar seguidas en rangos<small>1, 2, 3, 4 se comparte como 1-4</small></span></label></div>`;}
+  <label class="chk"><input type="checkbox" id="sh-rg" data-sh="ranges" ${sh.ranges?'checked':''}><span>Agrupar seguidas en rangos<small>1, 2, 3, 4 se comparte como 1-4</small></span></label>
+  <label class="chk"><input type="checkbox" id="sh-bd" data-sh="bold" ${sh.bold?'checked':''}><span>Títulos de sección en negrita<small>En WhatsApp se ven así: *Lista Básicas · Vidrio:*</small></span></label>
+  <label class="chk"><input type="checkbox" id="sh-gg" data-sh="gapGroups" ${sh.gapGroups?'checked':''}><span>Línea en blanco entre cada variante<small>También deja una línea en blanco después del título de Faltantes o Repetidas</small></span></label>
+  <div class="f" style="margin-top:8px"><label for="sh-ft">Texto al final · {enlace} = link de la app</label><input id="sh-ft" data-sh="footer" value="${esc(sh.footer||'')}" placeholder="📲 Arma tu álbum aquí: {enlace}"></div>
+  <p class="muted" style="font-size:12px;margin:-4px 0 0">${appLink()?'El link es '+esc(appLink())+'.':'El link solo se agrega en la app instalada desde GitHub.'} Déjalo vacío para no poner nada al final.</p>
+  <p class="muted" style="font-size:12px;margin:6px 0 0">Los emojis de cada variante se ponen en la pestaña Variantes, en "Nombre al compartir".</p></div>`;}
   if(etab==='secs'){h+=`<div class="acts" style="margin-top:8px">${delBtn('delcol',0,'Eliminar colección')}<button class="btn" data-a="reset0">Poner todo en 0</button></div>`;}
   return h;
 }
@@ -807,7 +819,7 @@ function updateFromTemplate(c,t){const n=colFromTemplate(t);const oldSecs=c.sect
     const it=items(ns).find(x=>x.code===code);if(!it){lost+=cnt;return}
     let nk=key(ns,it);if(isMulti(ns)){const vv=vid&&ns.vars.includes(vid)?vid:(vid?null:ns.vars[0]);if(!vv){lost+=cnt;return}nk+='@'+vv}else if(vid&&!isMulti(ns)){/* venía con variante y ahora es de una sola */}
     counts[nk]=(counts[nk]||0)+cnt});
-  const keep={id:c.id,name:c.name,counts,goal:c.goal,goalPairs:(c.goalPairs||[]).filter(k=>newById.has(k.split('@')[0])),activeVar:c.activeVar,locked:c.locked,group:c.group,copy:c.copy,share:c.share,tpl:{id:t.id,file:t.file,version:t.version}};
+  const keep={id:c.id,name:c.name,counts,goal:c.goal,goalPairs:(c.goalPairs||[]).filter(k=>newById.has(k.split('@')[0])),activeVar:c.activeVar,ui:c.ui,locked:c.locked,group:c.group,copy:c.copy,share:c.share,tpl:{id:t.id,file:t.file,version:t.version}};
   const out=Object.assign(n,keep);const idx=S.cols.indexOf(c);S.cols[idx]=out;save();return lost}
 
 /* ---------- Acciones masivas con confirmación ---------- */
@@ -855,28 +867,29 @@ function shareText(c,o){const sh=c.share;const lines=[];const g=goalOf(c);
     secs.forEach((s,idx)=>{const its=items(s);const multi=isMulti(s);const groups=[];const st=new Map(its.map(it=>[it,itemState(c,s,it)]));
       if(kind==='miss'){
         const g=secGoal(c,s);if(g==='any'||!multi){const l=its.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0}).map(it=>({it,e:1}));if(l.length)groups.push([null,l])}
-        else secVars(c,s).forEach(vid=>{const l=its.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid)).map(it=>({it,e:1}));if(l.length)groups.push([varOf(c,vid).name,l])})}
+        else secVars(c,s).forEach(vid=>{const l=its.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid)).map(it=>({it,e:1}));if(l.length)groups.push([vShare(varOf(c,vid)),l])})}
       else{if(!multi){const l=[];its.forEach(it=>{const e=st.get(it).extras.reduce((a,z)=>a+z.e,0);if(e>0)l.push({it,e})});if(l.length)groups.push([null,l])}
-        else secVars(c,s).forEach(vid=>{const l=[];its.forEach(it=>{const z=st.get(it).extras.find(z=>z.vid===vid);if(z)l.push({it,e:z.e})});if(l.length)groups.push([varOf(c,vid).name,l])})}
+        else secVars(c,s).forEach(vid=>{const l=[];its.forEach(it=>{const z=st.get(it).extras.find(z=>z.vid===vid);if(z)l.push({it,e:z.e})});if(l.length)groups.push([vShare(varOf(c,vid)),l])})}
       if(!groups.length)return;
-      groups.forEach(([vn,l])=>{total+=kind==='miss'?l.length:(sh.repCount?l.reduce((a,z)=>a+z.e,0):l.length);
+      groups.forEach(([vn,l],gi)=>{if(gi&&sh.gapGroups&&sh.nameOwnLine)rows.push('');total+=kind==='miss'?l.length:(sh.repCount?l.reduce((a,z)=>a+z.e,0):l.length);
         const plain=kind==='miss'||!sh.repCount;
         const parts=sh.ranges&&plain?compress(l.map(z=>z.it),s):l.map(z=>kind==='rep'&&sh.repCount&&z.e>1?z.it.share+' (x'+z.e+')':z.it.share);
         const nm=(s.shareName||s.name)+(s.emoji?' '+s.emoji:'')+(vn?' · '+vn:'');
-        const head=sh.secName?nm+(sh.showVariant&&!multi?' ('+varOf(c,s.allSpecial?(s.specialVariant||s.variant):s.variant).name+')':'')+':':(vn?vn+':':'');
+        let head=sh.secName?nm+(sh.showVariant&&!multi?' ('+vShare(varOf(c,s.allSpecial?(s.specialVariant||s.variant):s.variant))+')':'')+':':(vn?vn+':':'');if(head&&sh.bold)head='*'+head+'*';
         const body=layoutOf(s)==='lines'?parts.join('\n'):parts.join(sh.sep);
         if(head&&(sh.nameOwnLine||layoutOf(s)==='lines'))rows.push(head,body);else rows.push((head?head+' ':'')+body)});
       if(s.breakShare&&idx<secs.length-1)rows.push('')});
     while(rows.length&&rows[rows.length-1]==='')rows.pop();
-    if(rows.length){lines.push('');lines.push(title.replace('{n}',total));lines.push(...rows)}};
+    if(rows.length){lines.push('');lines.push(title.replace('{n}',total));if(sh.gapGroups&&sh.nameOwnLine)lines.push('');lines.push(...rows)}};
   if(o.miss)block(sh.missTitle,'miss');
   if(o.rep)block(sh.repTitle,'rep');
+  const ft=String(sh.footer||'').trim();if(ft){const lk=appLink();if(!ft.includes('{enlace}')||lk){lines.push('');lines.push(ft.replace('{enlace}',lk).replace('{nombre}',c.name))}}
   return lines.join('\n')}
 let shOpt={miss:true,rep:true};
 function openShare(){const c=col();const t=shareText(c,shOpt);
   sheet(`<div class="sechd"><h2 style="flex:1">Compartir</h2><button class="btn sm" data-a="close">Cerrar</button></div>
   <div class="seg" style="margin:10px 0 0"><button aria-pressed="${shOpt.miss}" data-a="sho" data-k="miss">Faltantes</button><button aria-pressed="${shOpt.rep}" data-a="sho" data-k="rep">Repetidas</button></div>
-  ${shOpt.rep?`<label class="chk"><input type="checkbox" id="sh-rc" data-a="repcount" ${c.share.repCount?'checked':''}><span>Indicar cuántas repetidas tengo de cada una<small>Ej: 5 (x2)</small></span></label>`:''}<pre id="shtxt">${esc(t)}</pre><div class="acts"><button class="btn pri" data-a="copy">Copiar texto</button>${navigator.share?'<button class="btn" data-a="natshare">Enviar…</button>':''}<button class="btn" data-a="edit" data-t="share">Ajustar formato</button></div>
+  ${shOpt.rep?`<label class="chk"><input type="checkbox" id="sh-rc" data-a="repcount" ${c.share.repCount?'checked':''}><span>Indicar cuántas repetidas tengo de cada una<small>Ej: 5 (x2)</small></span></label>`:''}<pre id="shtxt" class="wa" data-raw="${esc(t)}">${waHTML(t)}</pre><div class="acts"><button class="btn pri" data-a="copy">Copiar texto</button>${navigator.share?'<button class="btn" data-a="natshare">Enviar…</button>':''}<button class="btn" data-a="edit" data-t="share">Ajustar formato</button></div>
   <p class="muted" style="font-size:12.5px;margin-top:10px">Pega el texto en WhatsApp. Qué secciones salen y los saltos de línea se configuran en cada sección.</p>`)}
 
 /* ---------- Importar / exportar ---------- */
@@ -891,7 +904,10 @@ function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;
   ${it('mdup','⎘','Duplicar con lo marcado','Copia exacta, incluye figuritas y repetidas')}
   ${it('medit','✎','Editar álbum','Secciones, variantes, brillos y formato al compartir')}
   ${!c.tpl?it('mlink','▦','Pasar a una plantilla','Usa una plantilla publicada y conserva tus figuritas marcadas'):''}
-  ${tplNewer(c)?(menuUpd?`<button data-a="mupd" data-id="${c.id}" data-ok="1"><span class="mi">⟳</span><span><b>Toca otra vez para actualizar</b><small>Se mantienen tus figuritas marcadas, tu meta y tu nombre.</small></span></button>`:it('mupd','⟳','Actualizar plantilla','Hay versión '+tplNewer(c).version+' (tienes la '+(c.tpl.version||1)+')')):''}
+  ${c.tpl?(menuUpd?`<button data-a="mupd" data-id="${c.id}" data-ok="1"><span class="mi">⟳</span><span><b>Toca otra vez para actualizar</b><small>Toma secciones, variantes y brillos de la plantilla. Se mantienen tus figuritas, tu meta y tu nombre.</small></span></button>`
+    :!tplCache?`<div class="mrowinfo"><span class="mi">⟳</span><span><b>Actualizar desde plantilla</b><small>Buscando la plantilla…</small></span></div>`
+    :tplOf(c)?it('mupd','⟳',tplNewer(c)?'Actualizar plantilla · nueva versión '+tplOf(c).version:'Actualizar desde plantilla',tplNewer(c)?'Tienes la versión '+(c.tpl.version||1)+'. Toma los cambios de la plantilla.':'Tienes la versión '+(c.tpl.version||1)+'. Vuelve a cargarla por si cambió algo.')
+    :`<div class="mrowinfo"><span class="mi">⟳</span><span><b>Actualizar desde plantilla</b><small>La plantilla no está disponible ahora. Revisa tu conexión.</small></span></div>`):''}
   ${it('mtrade','⇄','Intercambiar','Compara con un amigo que tenga la misma configuración')}
   ${it('mgroup','▤','Mover a grupo',(S.groups||[]).find(g=>g.id===c.group)?.name?'Ahora en: '+(S.groups||[]).find(g=>g.id===c.group).name:'Sin agrupación')}
   ${it('medit','◐','Variantes y brillos','Colores, acabados y brillos de esta colección').replace('data-a="medit"','data-a="medit" data-t="vars"')}
@@ -1011,10 +1027,10 @@ document.addEventListener('click',e=>{
    case 'qok':{const c2=col();const tot=qtyVal+qtyBase;if(tot)c2.counts[qtyKey]=tot;else delete c2.counts[qtyKey];save();closeSheet();refreshSec(itemKeyOf(qtyKey).split('|')[0]);break}
    case 'share':openShare();break;
    case 'sho':shOpt[b.dataset.k]=!shOpt[b.dataset.k];openShare();break;
-   case 'copy':copy(document.getElementById('shtxt').textContent,document.getElementById('shtxt'));break;
+   case 'copy':copy(shRaw(),document.getElementById('shtxt'));break;
    case 'dljson':{const t=document.getElementById('exp').textContent;if(b.dataset.file){const c1=S.cols.find(x=>x.id===b.dataset.id);if(c1){const o=JSON.parse(t);c1.tpl={id:o.plantilla.id,file:b.dataset.file,version:o.plantilla.version};save()}const a2=document.createElement('a');a2.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a2.download=b.dataset.file;document.body.appendChild(a2);a2.click();setTimeout(()=>{URL.revokeObjectURL(a2.href);a2.remove()},1000);toast('Plantilla descargada: '+b.dataset.file);break}const cc=S.cols.find(x=>x.id===b.dataset.id);const nm=(cc?cc.name:'colecciones').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')||'album';
      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a.download=`${nm}_${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('Archivo descargado');break}
-   case 'natshare':navigator.share({text:document.getElementById('shtxt').textContent}).catch(()=>{});break;
+   case 'natshare':navigator.share({text:shRaw()}).catch(()=>{});break;
    case 'copyexp':if(expTpl&&b.closest('#sheet')){const c1=S.cols.find(x=>x.id===document.getElementById('exp-tpl')?.dataset.id);if(c1){const o=JSON.parse(document.getElementById('exp').textContent);c1.tpl={id:o.plantilla.id,file:c1.tpl?.file||o.plantilla.id+'.json',version:o.plantilla.version};save()}}copy(document.getElementById('exp').textContent,document.getElementById('exp'));break;
    case 'close':closeSheet();break;
    case 'io':openIO(true);break;
@@ -1069,7 +1085,7 @@ document.addEventListener('click',e=>{
    case 'tcodeshare':navigator.share({text:document.getElementById('tcode').textContent}).catch(()=>{});break;
    case 'tsel':{const set=tradeSel[b.dataset.side],k=b.dataset.tk;set.has(k)?set.delete(k):set.add(k);tradeDel=false;const y=scrollY;render();scrollTo(0,y);break}
    case 'tall':{const side=b.dataset.side,all=trade[side];tradeSel[side]=tradeSel[side].size===all.length?new Set():new Set(all);tradeDel=false;const y=scrollY;render();scrollTo(0,y);break}
-   case 'tcopy':{const c1=col();const t=tradeText(c1);sheet(`<div class="sechd"><h2 style="flex:1">Propuesta</h2><button class="btn sm" data-a="close">Cerrar</button></div><pre id="shtxt">${esc(t)}</pre><div class="acts"><button class="btn pri" data-a="copy">Copiar texto</button>${navigator.share&&window.IS_PWA?'<button class="btn" data-a="natshare">Enviar…</button>':''}</div>`);break}
+   case 'tcopy':{const c1=col();const t=tradeText(c1);sheet(`<div class="sechd"><h2 style="flex:1">Propuesta</h2><button class="btn sm" data-a="close">Cerrar</button></div><pre id="shtxt" class="wa" data-raw="${esc(t)}">${waHTML(t)}</pre><div class="acts"><button class="btn pri" data-a="copy">Copiar texto</button>${navigator.share&&window.IS_PWA?'<button class="btn" data-a="natshare">Enviar…</button>':''}</div>`);break}
    case 'treg':if(!b.dataset.ok){tradeDel=true;const y=scrollY;render();scrollTo(0,y);break}{const c1=col();let g=0,d=0;tradeSel.get.forEach(k=>{c1.counts[k]=(c1.counts[k]||0)+1;g++});tradeSel.give.forEach(k=>{if((c1.counts[k]||0)>0){c1.counts[k]--;if(!c1.counts[k])delete c1.counts[k];d++}});save();trade=null;view='album';render();scrollTo(0,0);toast(`Intercambio registrado: +${g} recibidas, −${d} entregadas`);break}
    case 'treset':trade=null;render();scrollTo(0,0);break;
    case 'actv':{const c1=col();c1.activeVar=b.dataset.id;save();const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y);break}
@@ -1099,8 +1115,8 @@ document.addEventListener('click',e=>{
    case 'goal':c.goal=b.dataset.k;{const y=scrollY;render();scrollTo(0,y)}break;
    case 'mlink':linkSel=null;tplQ='';openLink(b.dataset.id);break;
    case 'dolink':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplCache.list[+b.dataset.i];if(!b.dataset.ok){linkSel=+b.dataset.i;openLink(c1.id);break}const nm=c1.name;const lost=updateFromTemplate(c1,t);const c2=S.cols.find(x=>x.id===c1.id);c2.name=nm;save();linkSel=null;closeSheet();render();toast(lost?'Listo. '+lost+' figuritas no tenían lugar en la plantilla.':'Listo, ahora usa la plantilla '+t.name);break}
-   case 'mupd':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplNewer(c1);if(!t)break;if(!b.dataset.ok){menuUpd=true;openColMenu(c1.id);break}const lost=updateFromTemplate(c1,t);menuUpd=false;closeSheet();render();toast(lost?'Actualizada. '+lost+' figuritas no tenían lugar en la nueva versión.':'Colección actualizada a la versión '+t.version);break}
-   case 'colmenu':menuUpd=false;menuDel=false;openColMenu(b.dataset.id);break;
+   case 'mupd':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplOf(c1);if(!t)break;if(!b.dataset.ok){menuUpd=true;openColMenu(c1.id);break}const lost=updateFromTemplate(c1,t);menuUpd=false;closeSheet();render();toast(lost?'Actualizada. '+lost+' figuritas no tenían lugar en la nueva versión.':'Colección actualizada con la plantilla (versión '+t.version+')');break}
+   case 'colmenu':menuUpd=false;menuDel=false;{const c1=S.cols.find(x=>x.id===b.dataset.id);if(c1&&c1.tpl){loadTemplates(true).then(()=>{if(!document.getElementById('sheet').hidden&&document.querySelector('#sheetBody [data-a="mupd"],#sheetBody .mrowinfo'))openColMenu(c1.id)})}}openColMenu(b.dataset.id);break;
    case 'mnew':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),false);closeSheet();render();toast('Copia nueva lista: '+n.name);break}
    case 'mdup':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),true);closeSheet();render();toast('Duplicada: '+n.name);break}
    case 'medit':beginEdit(S.cols.find(x=>x.id===b.dataset.id),false,b.dataset.t);break;

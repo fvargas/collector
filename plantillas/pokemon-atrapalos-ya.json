@@ -14,14 +14,16 @@
       "id": "dorado",
       "name": "Dorado",
       "color": "#e2a33b",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Dorado🪙"
     },
     {
       "id": "plateado-vidrio",
       "name": "Plateado vidrio",
       "color": "#aeb7c4",
       "effect": "metal",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Plateado🥈 vidrio🪩"
     }
   ],
   "share": {
@@ -35,7 +37,10 @@
     "secName": true,
     "nameOwnLine": true,
     "showVariant": false,
-    "repCount": false
+    "repCount": false,
+    "bold": true,
+    "gapGroups": true,
+    "footer": "📲 Arma tu álbum aquí: {enlace}"
   },
   "counts": {},
   "sections": [
@@ -440,7 +445,7 @@
   ],
   "plantilla": {
     "id": "pokemon-atrapalos-ya",
-    "version": 1,
+    "version": 2,
     "descripcion": "Kanto 1-151, Johto 152-251, Duos/Trios, Especiales dorados, Limited Edition y Jumbos."
   }
 }

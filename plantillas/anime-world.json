@@ -15,14 +15,16 @@
       "name": "Vidrio",
       "color": "#8fb4c9",
       "effect": "solid",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Vidrio🪩"
     },
     {
       "id": "estrella",
       "name": "Estrella",
       "color": "#c9a43b",
       "effect": "solid",
-      "texture": "tx-estrella"
+      "texture": "tx-estrella",
+      "shareName": "Estrella⭐"
     },
     {
       "id": "sin-efecto",
@@ -35,46 +37,53 @@
       "name": "Verde escarcha",
       "color": "#2fa36b",
       "effect": "solid",
-      "texture": "tx-escarcha"
+      "texture": "tx-escarcha",
+      "shareName": "Verde🟢 escarcha✨"
     },
     {
       "id": "dorado-escarcha",
       "name": "Dorado escarcha",
       "color": "#e2a33b",
       "effect": "metal",
-      "texture": "tx-escarcha"
+      "texture": "tx-escarcha",
+      "shareName": "Dorado🪙 escarcha✨"
     },
     {
       "id": "verde-vidrio",
       "name": "Verde vidrio",
       "color": "#2fa36b",
       "effect": "solid",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Verde🟢 vidrio🪩"
     },
     {
       "id": "azul-vidrio",
       "name": "Azul vidrio",
       "color": "#3f7be3",
       "effect": "solid",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Azul🔵 vidrio🪩"
     },
     {
       "id": "plateado",
       "name": "Plateado",
       "color": "#aeb7c4",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Plateado🥈"
     },
     {
       "id": "dorado",
       "name": "Dorado",
       "color": "#e2a33b",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Dorado🪙"
     },
     {
       "id": "celeste",
       "name": "Celeste",
       "color": "#6cc8e0",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Celeste🔵"
     }
   ],
   "share": {
@@ -88,7 +97,10 @@
     "secName": true,
     "nameOwnLine": true,
     "showVariant": false,
-    "repCount": false
+    "repCount": false,
+    "bold": true,
+    "gapGroups": true,
+    "footer": "📲 Arma tu álbum aquí: {enlace}"
   },
   "counts": {},
   "sections": [
@@ -341,7 +353,7 @@
   ],
   "plantilla": {
     "id": "anime-world",
-    "version": 2,
+    "version": 3,
     "descripcion": "Básicas 1-216 (básica, vidrio, estrella), Sectorizadas T, Especiales E y L, Jumbos y Aniversary Edition."
   }
 }

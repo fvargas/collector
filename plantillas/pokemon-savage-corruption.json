@@ -8,21 +8,24 @@
       "id": "tornasol",
       "name": "Tornasol",
       "color": "#9fb7d6",
-      "effect": "iris"
+      "effect": "iris",
+      "shareName": "Tornasol🌈"
     },
     {
       "id": "vidrio-lote-1",
       "name": "Vidrio lote 1",
       "color": "#8fb4c9",
       "effect": "solid",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Vidrio🪩 lote 1"
     },
     {
       "id": "vidrio-lote-2",
       "name": "Vidrio lote 2",
       "color": "#b4a0d8",
       "effect": "solid",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Vidrio🪩 lote 2"
     },
     {
       "id": "sin-efecto",
@@ -34,64 +37,74 @@
       "id": "plateado",
       "name": "Plateado",
       "color": "#aeb7c4",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Plateado🥈"
     },
     {
       "id": "dorado",
       "name": "Dorado",
       "color": "#e2a33b",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Dorado🪙"
     },
     {
       "id": "morado",
       "name": "Morado",
       "color": "#8b5cf6",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Morado🟣"
     },
     {
       "id": "plateado-vidrio",
       "name": "Plateado vidrio",
       "color": "#aeb7c4",
       "effect": "metal",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Plateado🥈 vidrio🪩"
     },
     {
       "id": "dorado-vidrio",
       "name": "Dorado vidrio",
       "color": "#e2a33b",
       "effect": "metal",
-      "texture": "tx-vidrio"
+      "texture": "tx-vidrio",
+      "shareName": "Dorado🪙 vidrio🪩"
     },
     {
       "id": "morado-fondo-plateado",
       "name": "Morado fondo plateado",
       "color": "#9a8cc8",
-      "effect": "metal"
+      "effect": "metal",
+      "shareName": "Morado🟣 fondo plateado🥈"
     },
     {
       "id": "morado-fondo-dorado",
       "name": "Morado fondo dorado",
       "color": "#a46ad0",
       "effect": "metal",
-      "texture": "tx-escarcha"
+      "texture": "tx-escarcha",
+      "shareName": "Morado🟣 fondo dorado🪙"
     },
     {
       "id": "verde",
       "name": "Verde",
       "color": "#2fa36b",
-      "effect": "solid"
+      "effect": "solid",
+      "shareName": "Verde🟢"
     },
     {
       "id": "azul",
       "name": "Azul",
       "color": "#3f7be3",
-      "effect": "solid"
+      "effect": "solid",
+      "shareName": "Azul🔵"
     },
     {
       "id": "rojo",
       "name": "Rojo",
       "color": "#e0533d",
-      "effect": "solid"
+      "effect": "solid",
+      "shareName": "Rojo🔴"
     }
   ],
   "share": {
@@ -105,7 +118,10 @@
     "secName": true,
     "nameOwnLine": true,
     "showVariant": false,
-    "repCount": false
+    "repCount": false,
+    "bold": true,
+    "gapGroups": true,
+    "footer": "📲 Arma tu álbum aquí: {enlace}"
   },
   "counts": {},
   "sections": [
@@ -666,7 +682,7 @@
   ],
   "plantilla": {
     "id": "pokemon-savage-corruption",
-    "version": 1,
+    "version": 2,
     "descripcion": "Kanto y Johto (tornasol, vidrio lote 1 y 2), Sectorizada S, listas DK, LG, Synthetic Evolve, Mythical, Reliques y Jumbos."
   }
 }
