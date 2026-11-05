@@ -288,6 +288,15 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 .tplgrp .menu{padding:0 12px}
 .mrowinfo{display:flex;gap:14px;align-items:center;padding:14px 2px;border-top:1px solid var(--line);opacity:.7}.mrowinfo b{display:block}.mrowinfo small{display:block;color:var(--muted);font-size:12.5px}
 .sheet pre.wa{font-family:var(--f-body);font-size:14px;line-height:1.5}.sheet pre.wa b{font-weight:700}
+.tpllock{display:block;font-size:12.5px;line-height:1.45;margin-bottom:10px}
+.card button:disabled,.card input:disabled,.card textarea:disabled{opacity:.55;cursor:not-allowed}
+.rsecs{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:10px 0 0}.rsecs .lbl{flex:1}
+.tile .dots i.half{background:linear-gradient(90deg,var(--dc) 50%,transparent 50%)}
+.actv.setc{padding:5px 11px}
+.mctr{display:flex;align-items:center;gap:8px}.mctr output{min-width:28px;text-align:center;font:800 20px var(--f-display)}
+.setsrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.setin{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 10px;background:var(--bg);font-size:13px;font-weight:600}
+.setin input{width:56px;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--surface);text-align:center}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;z-index:30;font-size:14px}
 </style>
 
@@ -302,9 +311,10 @@ body.editing .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 <script>
 function waHTML(t){return esc(t).split('\n').map(l=>l.replace(/(^|[\s(])\*([^*\n]*[^*\s\n])\*(?=$|[\s.,:;!?)])/g,'$1<b>$2</b>').replace(/(^|[\s(])_([^_\n]*[^_\s\n])_(?=$|[\s.,:;!?)])/g,'$1<i>$2</i>').replace(/(^|[\s(])~([^~\n]*[^~\s\n])~(?=$|[\s.,:;!?)])/g,'$1<s>$2</s>')).join('\n')}
 const shRaw=()=>{const e=document.getElementById('shtxt');return e?(e.dataset.raw!=null?e.dataset.raw:e.textContent):''};
-const appLink=()=>{try{return window.IS_PWA?location.origin+location.pathname.replace(/index\.html$/,''):''}catch(e){return ''}};
+const APP_URL='https://album-figuritas.github.io/colecciones/';
+const appLink=()=>APP_URL;
 const vShare=v=>v&&(v.shareName||v.name)||'';
-const APP_VER='21';
+const APP_VER='28';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -438,16 +448,23 @@ const legacyVid=(s,it)=>it.special?(s.specialVariant||s.variant):s.variant;
 function slotsOf(c,s,it){const k=key(s,it);return isMulti(s)?secVars(c,s).map(vid=>({k:k+'@'+vid,vid})):[{k,vid:legacyVid(s,it)}]}
 const itemKeyOf=k=>{const i=k.indexOf('@');return i<0?k:k.slice(0,i)};
 const vidOfSlot=k=>{const i=k.indexOf('@');return i<0?null:k.slice(i+1)};
+const setsOf=(c,s,vid)=>{if(goalOf(c)==='any'||!c.sets)return 1;const n=+c.sets[pairKey(s,vid)]||1;return Math.max(1,Math.min(20,n))};
+const setView=(c,s,vid)=>{const N=setsOf(c,s,vid);if(N<2)return 0;const v=+(((c.ui||{}).setv||{})[pairKey(s,vid)]||0);return v>N?0:v};
+const maxSets=c=>{if(goalOf(c)==='any'||!c.sets)return 1;return Math.max(1,...Object.values(c.sets).map(n=>+n||1))};
+function setChips(c,s,vid,kind){const N=setsOf(c,s,vid);if(N<2)return '';const cur=setView(c,s,vid);const its=items(s);const pk=pairKey(s,vid);const sfx=isMulti(s)?'@'+vid:'';
+  const has=k=>{let h=0;its.forEach(it=>{if((c.counts[key(s,it)+sfx]||0)>=k)h++});return h};
+  const btn=(k,l,x)=>`<button class="actv setc" data-a="setv" data-p="${esc(pk)}" data-s="${s.id}" data-k="${k}" aria-pressed="${cur===k}">${l}${x!=null?`<span class="cnt">${x}</span>`:''}</button>`;
+  return `<div class="schips" role="group" aria-label="Set"><span class="lbl">Set</span>${btn(0,'Todos',null)}${Array.from({length:N},(_,i)=>btn(i+1,'Set '+(i+1),kind==='miss'?its.length-has(i+1):has(i+1)+'/'+its.length)).join('')}</div>`}
 function itemState(c,s,it){const g=secGoal(c,s);const sl=slotsOf(c,s,it).map(x=>({...x,n:c.counts[x.k]||0,goal:inGoalSec(c,s,x.vid)}));
   const tot=sl.reduce((a,x)=>a+x.n,0);const extras=[];let units,have,missSlots=[];
   if(g==='any'){units=sl.length?1:0;have=tot>0&&units?1:0;const keep=sl.find(x=>x.n>0);sl.forEach(x=>{const e=x===keep?x.n-1:x.n;if(e>0)extras.push({...x,e})})}
-  else{const gs=sl.filter(x=>x.goal);units=gs.length;have=gs.filter(x=>x.n>0).length;missSlots=gs.filter(x=>!x.n);sl.forEach(x=>{const e=x.goal?x.n-1:x.n;if(e>0)extras.push({...x,e})})}
+  else{const gs=sl.filter(x=>x.goal);units=0;have=0;gs.forEach(x=>{const N=setsOf(c,s,x.vid);x.N=N;units+=N;have+=Math.min(x.n,N);if(x.n<N)missSlots.push({...x,need:N-x.n})});sl.forEach(x=>{const e=x.goal?x.n-(x.N||1):x.n;if(e>0)extras.push({...x,e})})}
   return {sl,tot,units,have,missSlots,missItem:g==='any'&&units>0&&!have,extras,complete:units>0&&have===units}}
 function stats(c){let t=0,h=0,nt=0,nh=0,st=0,sh=0,rep=0;for(const s of c.sections)for(const it of items(s)){const x=itemState(c,s,it);t+=x.units;h+=x.have;rep+=x.extras.reduce((a,e)=>a+e.e,0);if(it.special){st+=x.units;sh+=x.have}else{nt+=x.units;nh+=x.have}}return{t,h,nt,nh,st,sh,rep}}
 function myNeeds(c){const slot=new Set(),item=new Set(),extra=new Map();
   for(const s of c.sections)for(const it of items(s)){const x=itemState(c,s,it);if(x.missItem)item.add(key(s,it));x.missSlots.forEach(m=>slot.add(m.k));x.extras.forEach(e=>extra.set(e.k,e.e))}
   return {slot,item,extra}}
-function baseOf(c,st,z){if(goalOf(c)==='any'){if(!st.tot)return null;const keep=st.sl.find(x=>x.n>0);return keep&&keep.k===z.k?1:0}return z.goal?(z.n>0?1:null):0}
+function baseOf(c,st,z){if(goalOf(c)==='any'){if(!st.tot)return null;const keep=st.sl.find(x=>x.n>0);return keep&&keep.k===z.k?1:0}return z.goal?(z.n>=(z.N||1)?(z.N||1):null):0}
 function slotBase(c,k){const {sec,it}=findItem(c,k);if(!sec||!it)return null;const st=itemState(c,sec,it);const z=st.sl.find(x=>x.k===k);if(!z)return null;return baseOf(c,st,z)}
 function repTileHTML(c,s,it,z,e,na){const v=varOf(c,z.vid);
   return `<button class="tile ${e>0?'has':''} ${na?'na':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(z.k)}" title="${esc(it.share+(vidOfSlot(z.k)?' · '+v.name:''))}"><span class="lb">${esc(it.app)}</span>${e>0?`<span class="n">×${e}</span>`:''}</button>`}
@@ -464,15 +481,16 @@ function slotTileHTML(c,s,it,slot,n,badge){const v=varOf(c,slot.vid);
   return `<button class="tile ${n?'has':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(slot.k)}" title="${esc(it.share+(isMulti(s)?' · '+v.name:''))}"><span class="lb">${esc(it.app)}</span>${badge>1?`<span class="n">×${badge}</span>`:''}${it.special&&!n?'<span class="st">★</span>':''}</button>`}
 function mtileHTML(c,s,it){const x=itemState(c,s,it);const act=secAct(c,s);const owned=x.sl.filter(z=>z.n>0&&z.goal);const ex=x.extras.reduce((a,z)=>a+z.e,0);
   const show=owned.find(z=>z.vid===act)||owned[0]||x.sl.find(z=>z.vid===act)||x.sl[0];const v=varOf(c,show?show.vid:null);
-  const cls=x.complete?'has':owned.length?'has part':'';
-  const dots=x.sl.filter(z=>z.goal).slice(0,8).map(z=>{const dv=varOf(c,z.vid);return `<i class="${z.n?'on':''}" style="--dc:${esc(dv.color)}"></i>`}).join('');
-  return `<button class="tile mt ${cls} ${it.special?'sp':''} v-${v.effect} ${owned.length?txCls(c,v):''}" style="${esc(vStyle(v))}" data-mk="${esc(key(s,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${ex?`<span class="n">+${ex}</span>`:''}<span class="dots">${dots}</span></button>`}
+  const az=x.sl.find(z=>z.vid===act);const aN=az?(az.N||1):1,sv=az?setView(c,s,act):0;
+  const cls=az&&aN>1&&sv?(az.n>=sv?'has':''):x.complete?'has':owned.length?'has part':'';
+  const dots=x.sl.filter(z=>z.goal).slice(0,8).map(z=>{const dv=varOf(c,z.vid);const N=z.N||1;return `<i class="${z.n>=N?'on':z.n?'half':''}" style="--dc:${esc(dv.color)}"></i>`}).join('');
+  return `<button class="tile mt ${cls} ${it.special?'sp':''} v-${v.effect} ${owned.length?txCls(c,v):''}" style="${esc(vStyle(v))}" data-mk="${esc(key(s,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${ex?`<span class="n">+${ex}</span>`:az&&aN>1&&az.n?`<span class="n">${az.n}/${aN}</span>`:''}<span class="dots">${dots}</span></button>`}
 let mq=null;
 function openMulti(ik){const c=col();const {sec,it}=findItem(c,ik);if(!sec||!it)return;const sl=slotsOf(c,sec,it).filter(z=>inGoalSec(c,sec,z.vid));mq={ik,vals:{}};sl.forEach(z=>mq.vals[z.k]=c.counts[z.k]||0);
   const label=sec.kind==='num'?'Figurita '+it.share:it.share;
   sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">${esc(label)}</h2><button class="btn sm" data-a="close">Cerrar</button></div>
   <p class="muted" style="font-size:13px;margin:2px 0 6px">${esc(sec.name)} · marca en qué variantes la tienes. Las repetidas van en la pestaña Repetidas.</p>
-  <div class="mrows">${sl.map(z=>{const v=varOf(c,z.vid);const n=mq.vals[z.k];return `<div class="mrow own">${vPreview(c,v,it.app)}<span class="mname"><b>${esc(v.name)}</b><small>${n>1?'+'+(n-1)+' repetidas':''}</small></span><button class="btn own-t ${n?'pri':''}" data-a="mqt" data-k="${esc(z.k)}" ${n>1?'disabled':''} aria-pressed="${!!n}">${n?'La tengo ✓':'No la tengo'}</button></div>`}).join('')}</div>
+  <div class="mrows">${sl.map(z=>{const v=varOf(c,z.vid);const n=mq.vals[z.k];const N=setsOf(c,sec,z.vid);return N>1?`<div class="mrow own">${vPreview(c,v,it.app)}<span class="mname"><b>${esc(v.name)}</b><small>${N} sets</small></span><span class="mctr"><button class="qb sm" data-a="mqm" data-k="${esc(z.k)}" aria-label="Quitar">−</button><output id="mq-${esc(z.vid)}">${n}</output><button class="qb sm" data-a="mqp" data-k="${esc(z.k)}" aria-label="Agregar">+</button></span></div>`:`<div class="mrow own">${vPreview(c,v,it.app)}<span class="mname"><b>${esc(v.name)}</b><small>${n>1?'+'+(n-1)+' repetidas':''}</small></span><button class="btn own-t ${n?'pri':''}" data-a="mqt" data-k="${esc(z.k)}" ${n>1?'disabled':''} aria-pressed="${!!n}">${n?'La tengo ✓':'No la tengo'}</button></div>`}).join('')}</div>
   <div class="qacts" style="margin-top:14px"><button class="btn" data-a="close">Cancelar</button><button class="btn pri" data-a="mqok">Confirmar</button></div>`)}
 function migrateSecCounts(c,s,toMulti){const its=items(s);
   if(toMulti){its.forEach(it=>{const k=key(s,it),n=c.counts[k];if(n){const vid=s.vars.includes(legacyVid(s,it))?legacyVid(s,it):s.vars[0];c.counts[k+'@'+vid]=(c.counts[k+'@'+vid]||0)+n;delete c.counts[k]}})}
@@ -504,7 +522,7 @@ function homeHTML(){S.cols.forEach(ensure);if(!tplCache&&S.cols.some(c=>c.tpl))l
       h+=`<section class="grp-blk"><button class="ghead" data-a="gtoggle" data-id="${g.id}" aria-expanded="${!cl}"><span class="chev">${cl?'▸':'▾'}</span><b>${esc(g.name)}</b><span class="muted">${list.length}</span></button>${cl?'':list.length?listHTML(list):'<div class="empty">Vacío. Mueve colecciones aquí desde su menú ⋮ → Mover a grupo.</div>'}</section>`}
     if(loose.length){const cl=!!S.collapsed._none;h+=`<section class="grp-blk"><button class="ghead" data-a="gtoggle" data-id="_none" aria-expanded="${!cl}"><span class="chev">${cl?'▸':'▾'}</span><b>Sin agrupación</b><span class="muted">${loose.length}</span></button>${cl?'':listHTML(loose)}</section>`}}
   return h+`<div class="acts" style="margin-top:14px"><button class="btn pri" data-a="newcol">${IC.plus.replace('<svg','<svg width="18" height="18"')} Nueva colección</button><button class="btn" data-a="io-all">Importar JSON</button></div>
-  <p class="muted" style="font-size:13px;margin-top:18px">Versión ${APP_VER}. Los datos se guardan en este navegador. Exporta el JSON de vez en cuando como respaldo.</p>`;
+  <p class="muted" style="font-size:13px;margin-top:18px"><span data-a="ver" style="cursor:default">Versión ${APP_VER}</span>. Los datos se guardan en este navegador. Exporta el JSON de vez en cuando como respaldo.</p>`;
 }
 let gDel=null;
 function openSplit(i){const c=col();const s0=c.sections[i];
@@ -528,8 +546,9 @@ function openGroupPick(id){const c=S.cols.find(x=>x.id===id);S.groups=S.groups||
   <div class="grow" style="margin-top:12px"><input type="text" id="g-new2" placeholder="O crea un grupo nuevo"><button class="btn sm pri" data-a="gnewset" data-id="${id}">Crear y mover</button></div>`)}
 function ring(p){const r=26,C=2*Math.PI*r;return `<span class="ring"><svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*p/100} ${C}" transform="rotate(-90 32 32)"/></svg><span>${p}%</span></span>`}
 
-function tileHTML(c,sec,it){const n=c.counts[key(sec,it)]||0;const v=varOf(c,it.special?(sec.specialVariant||sec.variant):sec.variant);
-  return `<button class="tile ${n?'has':''} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(key(sec,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${n>1?`<span class="n">+${n-1}</span>`:''}${it.special&&!n?'<span class="st">★</span>':''}</button>`}
+function tileHTML(c,sec,it){const n=c.counts[key(sec,it)]||0;const v=varOf(c,it.special?(sec.specialVariant||sec.variant):sec.variant);const N=setsOf(c,sec,null),sv=setView(c,sec,null);
+  let cls,badge;if(N<2){cls=n?'has':'';badge=n>1?'+'+(n-1):''}else if(sv){cls=n>=sv?'has':'';badge=n>N?'+'+(n-N):''}else{cls=n>=N?'has':n?'has part':'';badge=n>N?'+'+(n-N):n?n+'/'+N:''}
+  return `<button class="tile ${cls} ${it.special?'sp':''} v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}" data-k="${esc(key(sec,it))}" title="${esc(it.share)}"><span class="lb">${esc(it.app)}</span>${badge?`<span class="n">${badge}</span>`:''}${it.special&&!n?'<span class="st">★</span>':''}</button>`}
 
 function chips(c,sec){const vs=[];
   if(isMulti(sec)){if(secVars(c,sec).length<2)secVars(c,sec).forEach(id=>vs.push([varOf(c,id),'',!inGoalSec(c,sec,id)]))}
@@ -546,15 +565,18 @@ function secBlock(c,sec,qq){if(!sec.showApp)return null;const fold=(c.ui&&c.ui.f
     let U=0,H=0;const st=new Map();all.forEach(it=>{const x=itemState(c,sec,it);st.set(it,x);U+=x.units;H+=x.have});
     const wide=sec.kind==='labels'?'wide':'';const grid=t=>`<div class="grid ${wide}">${t}</div>`;let body='',cnt='';
     if(tab==='album'){if(!list.length||!U)return null;
-      if(multi){const av=goalVarsOf(c,sec);body=selChips(c,sec,'act',av,id=>{let hv=0;all.forEach(it=>{if((c.counts[key(sec,it)+'@'+id]||0)>0)hv++});return hv+'/'+all.length})}
+      if(multi){const av=goalVarsOf(c,sec);body=selChips(c,sec,'act',av,id=>{let hv=0;const N=setsOf(c,sec,id);all.forEach(it=>{if((c.counts[key(sec,it)+'@'+id]||0)>=N)hv++});return hv+'/'+all.length});const a0=secAct(c,sec);if(a0)body+=setChips(c,sec,a0,'album')}
+      else body=setChips(c,sec,null,'album');
       body+=grid(list.map(it=>multi?mtileHTML(c,sec,it):tileHTML(c,sec,it)).join(''));cnt=H+' / '+U}
     else if(tab==='miss'){
-      const g=secGoal(c,sec);if(g==='any'||!multi){const l=list.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0});if(!l.length)return null;
-        body=grid(l.map(it=>multi?mtileHTML(c,sec,it):slotTileHTML(c,sec,it,st.get(it).sl[0],0,0)).join(''));cnt=l.length+' faltan'}
+      const g=secGoal(c,sec);if(g==='any'||!multi){const sv=multi?0:setView(c,sec,null);const l=list.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:sv?x.sl[0].goal&&x.sl[0].n<sv:x.missSlots.length>0});if(!l.length&&!sv)return null;
+        const nd=it=>{const m=st.get(it).missSlots[0];return m?m.need:1};
+        body=(multi?'':setChips(c,sec,null,'miss'))+grid(l.map(it=>multi?mtileHTML(c,sec,it):slotTileHTML(c,sec,it,st.get(it).sl[0],0,sv?0:nd(it))).join(''));cnt=(sv?l.length:l.reduce((a,it)=>a+(g==='any'?1:nd(it)),0))+' faltan'}
       else{const per=new Map();secVars(c,sec).forEach(vid=>{const l=list.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid));if(l.length)per.set(vid,l)});if(!per.size)return null;
           const av=[...per.keys()];const sel=uiSel(c,sec,'miss',av);let n=0;per.forEach(l=>n+=l.length);
           body=selChips(c,sec,'miss',av,id=>per.get(id).length);
-          sel.forEach(vid=>{const l=per.get(vid);body+=vsubHTML(c,vid,l.length)+grid(l.map(it=>slotTileHTML(c,sec,it,st.get(it).missSlots.find(m=>m.vid===vid),0,0)).join(''))});cnt=n+' faltan'}}
+          sel.forEach(vid=>{const sv=setView(c,sec,vid);let l=per.get(vid);if(sv)l=list.filter(it=>{const z=st.get(it).sl.find(z=>z.vid===vid);return z&&z.goal&&z.n<sv});
+            body+=setChips(c,sec,vid,'miss')+vsubHTML(c,vid,l.length)+grid(l.map(it=>{const x=st.get(it);const m=x.missSlots.find(m=>m.vid===vid)||x.sl.find(z=>z.vid===vid);return slotTileHTML(c,sec,it,m,0,sv?0:(m.need||1))}).join(''))});cnt=n+' faltan'}}
     else{let n=0,shown=0;const per=new Map();const vids=multi?secVars(c,sec):[null];
       vids.forEach(vid=>{let e=0;list.forEach(it=>{const z=st.get(it).sl.find(z=>multi?z.vid===vid:true);if(!z)return;const b=baseOf(c,st.get(it),z);if(b!==null&&z.n-b>0)e+=z.n-b});per.set(vid,e)});
       let showV=vids;if(multi){const av=repView==='all'?vids:vids.filter(v=>per.get(v)>0);if(!av.length)return null;body=selChips(c,sec,'rep',av,id=>per.get(id));showV=uiSel(c,sec,'rep',av);vids.forEach(v=>n+=per.get(v))}
@@ -562,8 +584,8 @@ function secBlock(c,sec,qq){if(!sec.showApp)return null;const fold=(c.ui&&c.ui.f
         const e=l.reduce((a,[,,e])=>a+e,0);if(!multi)n+=e;shown+=l.length;
         body+=(multi?vsubHTML(c,vid,e)+(inGoalSec(c,sec,vid)?'':'<span class="vchip meta" style="margin:-2px 0 6px;display:inline-flex">Fuera de tu meta</span>'):'')+grid(l.map(([it,z,e,na])=>repTileHTML(c,sec,it,z,e,na)).join(''))});if(!shown&&!(multi&&body))return null;cnt=n+' rep.'}
     const v=varOf(c,multi?secVars(c,sec)[0]:sec.variant);
-    return {sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span>${!f&&tab!=='miss'?`<span class="sacts">${tab==='album'?`<button class="ib sm sa" data-a="bulk" data-k="fill" data-s="${sec.id}" aria-label="Completar sección" title="Completar sección">✓</button><button class="ib sm sa" data-a="bulk" data-k="clear" data-s="${sec.id}" aria-label="Limpiar sección" title="Limpiar sección">⌫</button>`:`<button class="ib sm sa" data-a="bulk" data-k="unrep" data-s="${sec.id}" aria-label="Quitar repetidas de la sección" title="Quitar repetidas de la sección">⌫</button>`}</span>`:''}</div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body}</section>`}}}
-function hintText(c){const used=activeVar(c).used;return tab==='rep'?(repView==='all'?'Toca para sumar una repetida y mantén presionado para quitar una. Aquí puedes cargar repetidas de cualquier sección o variante, aunque no la colecciones. Las tenues son las que te faltan. ⌫ quita las repetidas de la sección.':'Mantén presionado para quitar una repetida cuando la entregues. Con 4 o más se abre el contador. ⌫ quita las repetidas de la sección.'):tab==='miss'?'Toca una faltante cuando la consigas y deja de faltar.':(used.length?'Toca para marcar o desmarcar que la tienes, en la variante elegida en cada sección. Mantén presionado para ver todas sus variantes.':'Toca para marcar o desmarcar que la tienes.')+' Las repetidas se cargan en la pestaña Repetidas. ✓ completa la sección y ⌫ la limpia; siempre te pide confirmar.'}
+    return {sec,html:(nextId)=>{const f=!!fold[sec.id];return `<section class="sec ${sec.gapApp?'gap':''} ${f?'folded':''}" id="sec-${sec.id}" style="--vc:${esc(v.color)}"><div class="sechead"><button class="foldbtn" data-a="secfold" data-s="${sec.id}" aria-expanded="${!f}" aria-label="${f?'Desplegar':'Plegar'} ${esc(sec.name)}">${f?'▸':'▾'}</button><div style="flex:1;min-width:0"><h4 data-a="secfold" data-s="${sec.id}">${esc(sec.name)} ${esc(sec.emoji)}</h4>${f?'':chips(c,sec)}</div><span class="c">${cnt}</span>${!f&&tab!=='miss'?`<span class="sacts">${tab==='album'?`<button class="ib sm sa" data-a="bulk" data-k="fill" data-s="${sec.id}" aria-label="Completar sección" title="Completar sección">✓</button><button class="ib sm sa" data-a="bulk" data-k="clear" data-s="${sec.id}" aria-label="Limpiar sección" title="Limpiar sección">⌫</button>${ruleOn()?`<button class="ib sm sa" data-a="bulk" data-k="minus1" data-s="${sec.id}" aria-label="Restar 1 a toda la sección" title="Restar 1 a toda la sección">−1</button>`:''}`:`<button class="ib sm sa" data-a="bulk" data-k="unrep" data-s="${sec.id}" aria-label="Quitar repetidas de la sección" title="Quitar repetidas de la sección">⌫</button>`}</span>`:''}</div><div class="bar2"><i style="width:${U?H/U*100:0}%"></i></div>${f?'':body}</section>`}}}
+function hintText(c){const used=activeVar(c).used;return tab==='rep'?(repView==='all'?'Toca para sumar una repetida y mantén presionado para quitar una. Aquí puedes cargar repetidas de cualquier sección o variante, aunque no la colecciones. Las tenues son las que te faltan. ⌫ quita las repetidas de la sección.':'Mantén presionado para quitar una repetida cuando la entregues. Con 4 o más se abre el contador. ⌫ quita las repetidas de la sección.'):tab==='miss'?'Toca una faltante cuando la consigas y deja de faltar.':(used.length?'Toca para marcar o desmarcar que la tienes, en la variante elegida en cada sección. Mantén presionado para ver todas sus variantes.':'Toca para marcar o desmarcar que la tienes.')+' Las repetidas se cargan en la pestaña Repetidas. ✓ completa la sección y ⌫ la limpia; siempre te pide confirmar.'+(maxSets(c)>1?' En las secciones con varios sets, elige Todos para sumar de a uno (mantén presionado para restar) o un Set para marcar solo ese.':'')}
 function albumHTML(){const c=col(),s=stats(c),p=s.t?Math.round(s.h/s.t*100):0;const g=goalOf(c);const {used}=activeVar(c);
   const qq=q.trim().toUpperCase();let any=false;const out=[];const fold=(c.ui&&c.ui.fold)||{};
   for(const sec of c.sections){const o=secBlock(c,sec,qq);if(o){any=true;out.push(o)}}
@@ -598,11 +620,11 @@ const usedBy=(c,v)=>c.sections.filter(s=>s.variant===v.id||s.specialVariant===v.
 const varSum=(c,v)=>{const u=usedBy(c,v);return vLabel(c,v)+' · '+(u.length?u.join(', '):'Sin usar')};
 function varRow(c,v,i){const op=openVar===v.id;const o=(obj,cur)=>Object.entries(obj).map(([k,l])=>`<option value="${k}" ${k===cur?'selected':''}>${l}</option>`).join('');
   return `<div class="var acc">${vPreview(c,v,i+1)}<div style="min-width:0"><button class="acch" data-a="vtoggle" data-id="${v.id}" aria-expanded="${op}"><span><b>${esc(v.name)}</b><small>${esc(varSum(c,v))}</small></span><span class="chev">${op?'▴':'▾'}</span></button>
-  ${op?`<div class="vf" style="margin-top:8px"><input type="text" id="v-n-${v.id}" data-v="${i}" data-f="name" value="${esc(v.name)}" aria-label="Nombre de la variante"><input type="color" id="v-c-${v.id}" data-v="${i}" data-f="color" value="${esc(v.color)}" aria-label="Color">
+  ${op?`<div class="vf" style="margin-top:8px"><input type="text" id="v-n-${v.id}" data-v="${i}" data-f="name" value="${esc(v.name)}" aria-label="Nombre de la variante" ${varLocked(c,v)?'disabled title="Viene de la plantilla"':''}><input type="color" id="v-c-${v.id}" data-v="${i}" data-f="color" value="${esc(v.color)}" aria-label="Color">
   <input type="text" id="v-s-${v.id}" data-v="${i}" data-f="shareName" value="${esc(v.shareName||'')}" placeholder="Nombre al compartir, ej: Verde🟢 escarcha✨" aria-label="Nombre al compartir" style="grid-column:1/-1">
   <select id="v-e-${v.id}" data-v="${i}" data-f="effect" aria-label="Acabado">${o(EFFECTS,v.effect)}</select>
   <select id="v-t-${v.id}" data-v="${i}" data-f="texture" aria-label="Brillo"><option value="">Sin brillo</option>${c.textures.map(t=>`<option value="${t.id}" ${t.id===v.texture?'selected':''}>Brillo: ${esc(t.name)}</option>`).join('')}</select>
-  ${c.variants.length>1?`<div class="acts" style="grid-column:1/-1">${delBtn('delvar',i,'Quitar variante')}</div>`:''}</div>`:''}</div></div>`}
+  ${varLocked(c,v)?'<p class="muted" style="grid-column:1/-1;font-size:12px;margin:0">🔒 Viene de la plantilla: el nombre queda fijo. Color, acabado, brillo y nombre al compartir sí los puedes cambiar.</p>':c.variants.length>1?`<div class="acts" style="grid-column:1/-1">${delBtn('delvar',i,'Quitar variante')}</div>`:''}</div>`:''}</div></div>`}
 function pairsHTML(c){const pr=new Set(c.goalPairs||[]);const n=c.sections.reduce((a,s)=>a+(isMulti(s)?secVars(c,s).length:1),0);
   return `<div class="acts" style="margin:2px 0 8px"><span class="muted" style="font-size:12.5px;align-self:center;flex:1">${pr.size?pr.size+' de '+n+' marcadas':'Nada marcado: cuenta todo'}</span><button class="btn sm" data-a="gpall">Todas</button><button class="btn sm" data-a="gpnone">Ninguna</button></div>
   <div class="gpairs">${c.sections.map((s,i)=>{const chip=(k,v,label)=>`<label class="vck"><input type="checkbox" id="gp-${esc(k)}" data-gpair="${esc(k)}" ${pr.has(k)?'checked':''}>${v?`<i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>`:''}${esc(label)}</label>`;
@@ -621,24 +643,26 @@ function editHTML(){const c=col();const sh=c.share;
   <p class="muted" style="font-size:13px;margin:0 0 6px">Vidrio, láser, estrella, escarcha, burbuja… Ajusta los que vienen o crea uno nuevo cuando encuentres otro tipo, y úsalo en cualquier variante. Toca uno para editarlo.</p>
   ${c.textures.map((t,i)=>txEditor(c,t,i)).join('')}</div>`;}
   if(etab==='secs'){h+=`<div class="sechd" style="margin:20px 0 10px"><h3 style="flex:1">Secciones (${c.sections.length})</h3><button class="btn sm pri" data-a="addsec">+ Sección</button></div>`;
-  c.sections.forEach((s,i)=>{const p=`data-s="${i}"`;
+  c.sections.forEach((s,i)=>{const L=secLocked(c,s);const D=L?'disabled':'';const p=`data-s="${i}"`;
     h+=`<div class="card"><div class="sechd"><span class="idx">${i+1}</span><span class="nm">${esc(s.name)}</span><button class="btn sm" data-a="up" data-i="${i}" aria-label="Subir">↑</button><button class="btn sm" data-a="down" data-i="${i}" aria-label="Bajar">↓</button></div>
-    <div class="seg">${Object.entries(KINDS).map(([k,l])=>`<button aria-pressed="${s.kind===k}" data-a="kind" data-i="${i}" data-k="${k}">${l}</button>`).join('')}</div>
-    <div class="row"><div class="f"><label for="s${i}-n">Nombre en la app</label><input id="s${i}-n" ${p} data-f="name" value="${esc(s.name)}"></div><div class="f"><label for="s${i}-sn">Nombre al compartir</label><input id="s${i}-sn" ${p} data-f="shareName" value="${esc(s.shareName)}" placeholder="Igual que en la app"></div><div class="f"><label for="s${i}-e">Emoji</label><input id="s${i}-e" ${p} data-f="emoji" value="${esc(s.emoji)}" placeholder="⭐"></div></div>`;
-    if(s.kind==='num'||s.kind==='code')h+=`<div class="row">${s.kind==='code'?`<div class="f"><label for="s${i}-p">Código (letra)</label><input id="s${i}-p" ${p} data-f="prefix" value="${esc(s.prefix)}"></div>`:''}<div class="f"><label for="s${i}-a">Desde</label><input id="s${i}-a" type="number" inputmode="numeric" ${p} data-f="from" value="${esc(s.from)}"></div><div class="f"><label for="s${i}-b">Hasta</label><input id="s${i}-b" type="number" inputmode="numeric" ${p} data-f="to" value="${esc(s.to)}"></div></div>`;
-    if(s.kind==='letters')h+=`<div class="f"><label for="s${i}-l">Letras, separadas por coma</label><input id="s${i}-l" ${p} data-f="letters" value="${esc(s.letters)}" placeholder="A,B,C"></div><button class="btn sm" style="margin-bottom:10px" data-a="az" data-i="${i}">Rellenar A–Z</button>`;
-    if(s.kind==='labels')h+=`<div class="f"><label for="s${i}-lb">Una por línea · <code>texto en la app | texto al compartir</code></label><textarea id="s${i}-lb" ${p} data-f="labels">${esc((s.labels||[]).map(l=>l.app===l.share?l.app:l.app+' | '+l.share).join('\n'))}</textarea></div>`;
-    h+=`<div class="grp"><span class="lbl">Variantes de esta sección</span><div class="seg" style="margin-top:6px"><button aria-pressed="${!isMulti(s)}" data-a="secmulti" data-i="${i}" data-k="0">Una variante</button><button aria-pressed="${isMulti(s)}" data-a="secmulti" data-i="${i}" data-k="1">Sale en varias variantes</button></div>
-    ${isMulti(s)?`<p class="muted" style="font-size:12.5px;margin:-4px 0 6px">Cada figurita de esta sección se cuenta por separado en cada variante marcada.</p><div class="vchecks">${c.variants.map(v=>`<label class="vck"><input type="checkbox" id="s${i}-vc-${v.id}" data-s="${i}" data-varchk="${v.id}" ${s.vars.includes(v.id)?'checked':''}><i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>${esc(v.name)}</label>`).join('')}</div>
-    <div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial?'disabled':''}></div></div>`:`<div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial?'disabled':''}></div><div class="f"><label for="s${i}-v">Variante normal</label><select id="s${i}-v" ${p} data-f="variant">${varOpts(c,s.variant)}</select></div><div class="f"><label for="s${i}-sv">Variante especial</label><select id="s${i}-sv" ${p} data-f="specialVariant">${varOpts(c,s.specialVariant,true)}</select></div></div>`}
-    <label class="chk"><input type="checkbox" id="s${i}-all" ${p} data-f="allSpecial" ${s.allSpecial?'checked':''}><span>Todas son especiales</span></label></div>
+    ${L?'<div class="lockbar tpllock">🔒 De la plantilla: el nombre, los números y sus variantes vienen fijos para que el intercambio funcione. Puedes agregarle variantes tuyas.</div>':''}
+    <div class="seg">${Object.entries(KINDS).map(([k,l])=>`<button aria-pressed="${s.kind===k}" data-a="kind" data-i="${i}" data-k="${k}" ${D}>${l}</button>`).join('')}</div>
+    <div class="row"><div class="f"><label for="s${i}-n">Nombre en la app</label><input id="s${i}-n" ${p} data-f="name" value="${esc(s.name)}" ${D}></div><div class="f"><label for="s${i}-sn">Nombre al compartir</label><input id="s${i}-sn" ${p} data-f="shareName" value="${esc(s.shareName)}" placeholder="Igual que en la app"></div><div class="f"><label for="s${i}-e">Emoji</label><input id="s${i}-e" ${p} data-f="emoji" value="${esc(s.emoji)}" placeholder="⭐"></div></div>`;
+    if(s.kind==='num'||s.kind==='code')h+=`<div class="row">${s.kind==='code'?`<div class="f"><label for="s${i}-p">Código (letra)</label><input id="s${i}-p" ${p} data-f="prefix" value="${esc(s.prefix)}" ${D}></div>`:''}<div class="f"><label for="s${i}-a">Desde</label><input id="s${i}-a" type="number" inputmode="numeric" ${p} data-f="from" value="${esc(s.from)}" ${D}></div><div class="f"><label for="s${i}-b">Hasta</label><input id="s${i}-b" type="number" inputmode="numeric" ${p} data-f="to" value="${esc(s.to)}" ${D}></div></div>`;
+    if(s.kind==='letters')h+=`<div class="f"><label for="s${i}-l">Letras, separadas por coma</label><input id="s${i}-l" ${p} data-f="letters" value="${esc(s.letters)}" placeholder="A,B,C" ${D}></div><button class="btn sm" style="margin-bottom:10px" data-a="az" data-i="${i}" ${D}>Rellenar A–Z</button>`;
+    if(s.kind==='labels')h+=`<div class="f"><label for="s${i}-lb">Una por línea · <code>texto en la app | texto al compartir</code></label><textarea id="s${i}-lb" ${p} data-f="labels" ${D}>${esc((s.labels||[]).map(l=>l.app===l.share?l.app:l.app+' | '+l.share).join('\n'))}</textarea></div>`;
+    h+=`<div class="grp"><span class="lbl">Variantes de esta sección</span><div class="seg" style="margin-top:6px"><button aria-pressed="${!isMulti(s)}" data-a="secmulti" data-i="${i}" data-k="0" ${D}>Una variante</button><button aria-pressed="${isMulti(s)}" data-a="secmulti" data-i="${i}" data-k="1" ${D}>Sale en varias variantes</button></div>
+    ${isMulti(s)?`<p class="muted" style="font-size:12.5px;margin:-4px 0 6px">Cada figurita de esta sección se cuenta por separado en cada variante marcada.</p><div class="vchecks">${c.variants.map(v=>`<label class="vck"><input type="checkbox" id="s${i}-vc-${v.id}" data-s="${i}" data-varchk="${v.id}" ${L&&varLocked(c,v)?'disabled':''} ${s.vars.includes(v.id)?'checked':''}><i class="sw v-${v.effect} ${txCls(c,v)}" style="${esc(vStyle(v))}"></i>${esc(v.name)}</label>`).join('')}</div>
+    <div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial||L?'disabled':''}></div></div>`:`<div class="row"><div class="f"><label for="s${i}-sp">Especiales ${s.kind==='labels'||s.kind==='letters'?'(posición o texto)':''}</label><input id="s${i}-sp" ${p} data-f="specials" value="${esc(s.specials)}" placeholder="Ej: 1-18, 20, 24-32 o E1-E5" ${s.allSpecial||L?'disabled':''}></div><div class="f"><label for="s${i}-v">Variante normal</label><select id="s${i}-v" ${p} data-f="variant">${varOpts(c,s.variant)}</select></div><div class="f"><label for="s${i}-sv">Variante especial</label><select id="s${i}-sv" ${p} data-f="specialVariant">${varOpts(c,s.specialVariant,true)}</select></div></div>`}
+    <label class="chk"><input type="checkbox" id="s${i}-all" ${p} data-f="allSpecial" ${s.allSpecial?'checked':''} ${D}><span>Todas son especiales</span></label></div>
+    ${ruleOn()&&goalOf(c)!=='any'?`<div class="grp"><span class="lbl">🎡 Sets a juntar (solo en este celular)</span><div class="setsrow">${(isMulti(s)?secVars(c,s):[null]).map(vid=>{const pk=pairKey(s,vid);const v=vid?varOf(c,vid):null;return `<label class="setin"><span>${v?esc(v.name):'Sets'}</span><input type="number" inputmode="numeric" min="1" max="20" id="st-${esc(pk)}" data-setk="${esc(pk)}" value="${(c.sets&&c.sets[pk])||1}"></label>`}).join('')}</div></div>`:''}
     <div class="grp"><span class="lbl">Dónde aparece</span>
     <label class="chk"><input type="checkbox" id="s${i}-sa" ${p} data-f="showApp" ${s.showApp?'checked':''}><span>Mostrar en la app<small>Si la apagas, se oculta de la grilla pero sigue contando en el progreso.</small></span></label>
     <label class="chk"><input type="checkbox" id="s${i}-ss" ${p} data-f="showShare" ${s.showShare?'checked':''}><span>Incluir al compartir</span></label>
     <label class="chk"><input type="checkbox" id="s${i}-ga" ${p} data-f="gapApp" ${s.gapApp?'checked':''}><span>Separación antes de esta sección en la app</span></label>
     <label class="chk"><input type="checkbox" id="s${i}-bs" ${p} data-f="breakShare" ${s.breakShare?'checked':''}><span>Línea en blanco después de esta sección al compartir</span></label>
     <span class="lbl">Figuritas al compartir</span><div class="seg" style="margin-top:6px">${[['inline','Seguidas con separador'],['lines','Una por línea']].map(([k,l])=>`<button aria-pressed="${layoutOf(s)===k}" data-a="layout" data-i="${i}" data-k="${k}">${l}</button>`).join('')}</div></div>
-    <div class="acts" style="margin-top:6px"><button class="btn" data-a="dupsec" data-i="${i}">Duplicar sección</button>${isMulti(s)?'':`<button class="btn" data-a="secsplit" data-i="${i}">Copias por variante</button>`}${delBtn('delsec',i,'Eliminar sección')}</div></div>`});
+    <div class="acts" style="margin-top:6px"><button class="btn" data-a="dupsec" data-i="${i}">Duplicar sección</button>${isMulti(s)?'':`<button class="btn" data-a="secsplit" data-i="${i}">Copias por variante</button>`}${L?'':delBtn('delsec',i,'Eliminar sección')}</div></div>`});
   }
   if(etab==='share'){h+=`<div class="card"><h3 style="margin-bottom:10px">Texto al compartir</h3>
   <div class="f"><label for="sh-t">Encabezado · usa {nombre} y {editorial}</label><input id="sh-t" data-sh="title" value="${esc(sh.title)}"></div>
@@ -651,7 +675,7 @@ function editHTML(){const c=col();const sh=c.share;
   <label class="chk"><input type="checkbox" id="sh-bd" data-sh="bold" ${sh.bold?'checked':''}><span>Títulos de sección en negrita<small>En WhatsApp se ven así: *Lista Básicas · Vidrio:*</small></span></label>
   <label class="chk"><input type="checkbox" id="sh-gg" data-sh="gapGroups" ${sh.gapGroups?'checked':''}><span>Línea en blanco entre cada variante<small>También deja una línea en blanco después del título de Faltantes o Repetidas</small></span></label>
   <div class="f" style="margin-top:8px"><label for="sh-ft">Texto al final · {enlace} = link de la app</label><input id="sh-ft" data-sh="footer" value="${esc(sh.footer||'')}" placeholder="📲 Arma tu álbum aquí: {enlace}"></div>
-  <p class="muted" style="font-size:12px;margin:-4px 0 0">${appLink()?'El link es '+esc(appLink())+'.':'El link solo se agrega en la app instalada desde GitHub.'} Déjalo vacío para no poner nada al final.</p>
+  <p class="muted" style="font-size:12px;margin:-4px 0 0">El link es ${esc(appLink())}.  Déjalo vacío para no poner nada al final.</p>
   <p class="muted" style="font-size:12px;margin:6px 0 0">Los emojis de cada variante se ponen en la pestaña Variantes, en "Nombre al compartir".</p></div>`;}
   if(etab==='secs'){h+=`<div class="acts" style="margin-top:8px">${delBtn('delcol',0,'Eliminar colección')}<button class="btn" data-a="reset0">Poner todo en 0</button></div>`;}
   return h;
@@ -702,7 +726,7 @@ function parseTradeText(text,c){const res=newRes('',false);let mode=null,cur=nul
       const nt=normTxt(t),ut=t.toUpperCase();
       const it=its.find(x=>x.code.toUpperCase()===ut||normTxt(x.share)===nt||normTxt(x.app)===nt||((cur.kind==='labels'||cur.kind==='letters')&&String(x.num)===t.replace(/\)$/,'')));
       if(it)put(it);else res.unknown.push(t)})};
-  for(const raw of String(text).split(/\r?\n/)){const line=raw.trim();if(!line){cur=null;continue}const low=normTxt(line);
+  for(const raw of String(text).split(/\r?\n/)){const line=raw.replace(/[*_~]+/g,' ').replace(/\s+/g,' ').trim();if(!line){cur=null;continue}const low=normTxt(line);
     if(/\bfaltan/.test(low)&&/:\s*$/.test(line)){mode='miss';cur=null;heads++;continue}
     if(/\brepetid/.test(low)&&/:\s*$/.test(line)){mode='rep';cur=null;heads++;continue}
     const ci=line.indexOf(':');if(ci>0){const [s,vid]=matchHead(line.slice(0,ci));if(s){cur=s;cvid=vid;const rest=line.slice(ci+1).trim();if(rest&&mode)addItems(rest);continue}}
@@ -794,7 +818,6 @@ function loadTemplates(force){if(tplLoading&&!force)return tplLoading;
     tplCache={ok:true,list};return tplCache})();return tplLoading}
 const tplOf=c=>c.tpl&&tplCache&&tplCache.list.find(t=>t.id===c.tpl.id);
 const tplNewer=c=>{const t=tplOf(c);return t&&t.version>(c.tpl.version||0)?t:null};
-function colFromTemplate(t){const n=fromJSON(JSON.parse(JSON.stringify(t.data)));delete n.plantilla;n.counts={};n.tpl={id:t.id,file:t.file,version:t.version};return ensure(n)}
 let linkSel=null;
 function openLink(id){const c=S.cols.find(x=>x.id===id);
   tplRow=(t,i)=>linkSel===i?`<button data-a="dolink" data-id="${c.id}" data-i="${i}" data-ok="1"><span class="mi">✓</span><span><b>Toca otra vez para usar ${esc(t.name)}</b><small>No se puede deshacer. Si quieres, exporta antes un respaldo.</small></span></button>`:`<button data-a="dolink" data-id="${c.id}" data-i="${i}"><span class="mi">▦</span><span><b>${esc(t.name)}</b><small>${esc('versión '+t.version)}</small></span></button>`;
@@ -809,17 +832,40 @@ function openNewCol(){tplRow=(t,i)=>`<button data-a="newtpl" data-i="${i}"><span
   <h3 style="margin:14px 0 2px">Otras formas</h3>
   <div class="menu">${row('newblank','＋','En blanco','Armas las secciones desde cero')}${row('io-all','⇩','Desde un archivo JSON','Pega o elige un JSON que te pasaron')}</div>`);
   if(!tplCache)loadTemplates().then(()=>{if(!document.getElementById('sheet').hidden&&document.getElementById('tpllist'))openNewCol()})}
-function updateFromTemplate(c,t){const n=colFromTemplate(t);const oldSecs=c.sections;
-  const nameOf=new Map(oldSecs.map(s=>[s.id,normTxt(s.name)]));const newById=new Map(n.sections.map(s=>[s.id,s]));const newByName=new Map(n.sections.map(s=>[normTxt(s.name),s]));
-  const vname=new Map(c.variants.map(v=>[v.id,normTxt(v.name)]));const newVarByName=new Map(n.variants.map(v=>[normTxt(v.name),v.id]));const newVarIds=new Set(n.variants.map(v=>v.id));
-  const counts={};let lost=0;
+function colFromTemplate(t){const n=fromJSON(JSON.parse(JSON.stringify(t.data)));delete n.plantilla;n.counts={};n.tpl={id:t.id,file:t.file,version:t.version};
+  n.sections.forEach(s=>s.fromTpl=true);n.variants.forEach(v=>v.fromTpl=true);n.tplFlags=true;return ensure(n)}
+const secLocked=(c,s)=>!!(c&&c.tpl&&!c.tplOwner&&s&&(c.tplFlags?s.fromTpl:true));
+const varLocked=(c,v)=>!!(c&&c.tpl&&!c.tplOwner&&v&&(c.tplFlags?v.fromTpl:true));
+function uniqName(name,taken){let n=name+' (personal)',k=2;while(taken.has(normTxt(n)))n=name+' (personal '+(k++)+')';return n}
+function updateFromTemplate(c,t){const n=colFromTemplate(t);ensure(c);const hasFlags=!!c.tplFlags&&!c.tplOwner;
+  const newById=new Map(n.sections.map(s=>[s.id,s]));const newByName=new Map(n.sections.map(s=>[normTxt(s.name),s]));
+  const newVarIds=new Set(n.variants.map(v=>v.id));const newVarByName=new Map(n.variants.map(v=>[normTxt(v.name),v.id]));
+  const isTplSec=s=>hasFlags?!!s.fromTpl:!!(newById.get(s.id)||newByName.get(normTxt(s.name)));
+  const isTplVar=v=>hasFlags?!!v.fromTpl:(newVarIds.has(v.id)||newVarByName.has(normTxt(v.name)));
+  const matchSec=s=>newById.get(s.id)||newByName.get(normTxt(s.name));
+  // variantes propias: se conservan; si chocan de nombre con una de la plantilla se renombran
+  const takenV=new Set(n.variants.map(v=>normTxt(v.name)));const customVars=c.variants.filter(v=>!isTplVar(v)).map(v=>{const x=JSON.parse(JSON.stringify(v));delete x.fromTpl;if(newVarIds.has(x.id))x.id=uid();if(takenV.has(normTxt(x.name)))x.name=uniqName(x.name,takenV);takenV.add(normTxt(x.name));return [v.id,x]});
+  const varMap=new Map(customVars.map(([o,x])=>[o,x.id]));n.variants.push(...customVars.map(([,x])=>x));
+  const tids=new Set(n.textures.map(x=>x.id));(c.textures||[]).forEach(x=>{if(!tids.has(x.id))n.textures.push(x)});
+  // secciones propias: se conservan al final; si chocan de nombre se renombran
+  const takenS=new Set(n.sections.map(s=>normTxt(s.name)));const secMap=new Map();const customSecs=[];
+  c.sections.forEach(s=>{if(isTplSec(s)){const ns=matchSec(s);if(ns){secMap.set(s.id,ns);
+        if(isMulti(s)&&isMulti(ns))s.vars.forEach(id=>{const cid=varMap.get(id);if(cid&&!ns.vars.includes(cid))ns.vars.push(cid)})}return}
+    const x=JSON.parse(JSON.stringify(s));delete x.fromTpl;if(newById.has(x.id))x.id=uid();if(takenS.has(normTxt(x.name)))x.name=uniqName(x.name,takenS);takenS.add(normTxt(x.name));
+    if(isMulti(x))x.vars=x.vars.map(id=>varMap.get(id)||(newVarIds.has(id)?id:null)).filter(Boolean);
+    if(x.variant&&varMap.has(x.variant))x.variant=varMap.get(x.variant);if(x.specialVariant&&varMap.has(x.specialVariant))x.specialVariant=varMap.get(x.specialVariant);
+    secMap.set(s.id,x);customSecs.push(x)});
+  n.sections.push(...customSecs);
+  const vname=new Map(c.variants.map(v=>[v.id,normTxt(v.name)]));const counts={};let lost=0;
   Object.entries(c.counts||{}).forEach(([k,cnt])=>{const i=k.indexOf('|');const sid=k.slice(0,i);let rest=k.slice(i+1);const at=rest.indexOf('@');let code=at<0?rest:rest.slice(0,at),vid=at<0?null:rest.slice(at+1);
-    const ns=newById.get(sid)||newByName.get(nameOf.get(sid));if(!ns){lost+=cnt;return}
-    if(vid&&!newVarIds.has(vid))vid=newVarByName.get(vname.get(vid))||null;
-    const it=items(ns).find(x=>x.code===code);if(!it){lost+=cnt;return}
-    let nk=key(ns,it);if(isMulti(ns)){const vv=vid&&ns.vars.includes(vid)?vid:(vid?null:ns.vars[0]);if(!vv){lost+=cnt;return}nk+='@'+vv}else if(vid&&!isMulti(ns)){/* venía con variante y ahora es de una sola */}
+    const ns=secMap.get(sid);if(!ns){lost+=cnt;return}
+    if(vid){if(varMap.has(vid))vid=varMap.get(vid);else if(!newVarIds.has(vid))vid=newVarByName.get(vname.get(vid))||null}
+    const it=itemsRaw(ns).find(x=>x.code===code);if(!it){lost+=cnt;return}
+    let nk=key(ns,it);if(isMulti(ns)){const vv=vid&&ns.vars.includes(vid)?vid:(vid?null:ns.vars[0]);if(!vv){lost+=cnt;return}nk+='@'+vv}
     counts[nk]=(counts[nk]||0)+cnt});
-  const keep={id:c.id,name:c.name,counts,goal:c.goal,goalPairs:(c.goalPairs||[]).filter(k=>newById.has(k.split('@')[0])),activeVar:c.activeVar,ui:c.ui,locked:c.locked,group:c.group,copy:c.copy,share:c.share,tpl:{id:t.id,file:t.file,version:t.version}};
+  const gp=(c.goalPairs||[]).map(k=>{const [sid,vid]=k.split('@');const ns=secMap.get(sid);if(!ns)return null;return vid?ns.id+'@'+(varMap.get(vid)||vid):ns.id}).filter(Boolean);
+  const sets={};Object.entries(c.sets||{}).forEach(([k,v])=>{const [sid,vid]=k.split('@');const ns=secMap.get(sid);if(!ns)return;sets[vid?ns.id+'@'+(varMap.get(vid)||vid):ns.id]=v});
+  const keep={id:c.id,name:c.name,counts,sets,goal:c.goal,goalPairs:gp,activeVar:c.activeVar,ui:c.ui,locked:c.locked,group:c.group,copy:c.copy,share:c.share,tpl:{id:t.id,file:t.file,version:t.version},tplFlags:true,tplOwner:c.tplOwner};
   const out=Object.assign(n,keep);const idx=S.cols.indexOf(c);S.cols[idx]=out;save();return lost}
 
 /* ---------- Acciones masivas con confirmación ---------- */
@@ -832,7 +878,7 @@ function visSlots(c,sec){// slots visibles en la pestaña actual de esa sección
   else its.forEach(it=>out.push({it,k:key(sec,it),vid:legacyVid(sec,it)}));return out}
 function planFill(c,secs){const ks=[];secs.forEach(sec=>{
     if(isMulti(sec)&&secs.length>1){items(sec).forEach(it=>{const st=itemState(c,sec,it);if(goalOf(c)==='any'){if(st.missItem){const z=st.sl.find(x=>x.vid===secAct(c,sec))||st.sl[0];if(z)ks.push(z.k)}}else st.missSlots.forEach(m=>ks.push(m.k))})}
-    else visSlots(c,sec).forEach(({it,k,vid})=>{if((c.counts[k]||0)>0)return;if(!inGoalSec(c,sec,vid))return;if(goalOf(c)==='any'&&!itemState(c,sec,it).missItem)return;ks.push(k)})});return ks}
+    else visSlots(c,sec).forEach(({it,k,vid})=>{if((c.counts[k]||0)>=setsOf(c,sec,vid))return;if(!inGoalSec(c,sec,vid))return;if(goalOf(c)==='any'&&!itemState(c,sec,it).missItem)return;ks.push(k)})});return ks}
 function planClear(c,secs,all){const ks=[];let rep=0;secs.forEach(sec=>{const list=all?items(sec).flatMap(it=>slotsOf(c,sec,it)):visSlots(c,sec);list.forEach(z=>{const n=c.counts[z.k]||0;if(n>0){ks.push(z.k);rep+=Math.max(0,n-1)}})});return {ks,rep}}
 function planUnrep(c,secs,all){const out=[];let tot=0;secs.forEach(sec=>{items(sec).forEach(it=>{const st=itemState(c,sec,it);st.sl.forEach(z=>{if(!all&&isMulti(sec)&&z.vid!==uiSel(c,sec,'rep',secVars(c,sec))[0])return;const b=baseOf(c,st,z);if(b===null)return;const e=z.n-b;if(e>0){out.push([z.k,b]);tot+=e}})})});return {out,tot}}
 function vLabelSec(c,sec){if(!isMulti(sec))return sec.name;const vid=tab==='rep'?uiSel(c,sec,'rep',secVars(c,sec))[0]:secAct(c,sec);return sec.name+' · '+varOf(c,vid).name}
@@ -840,9 +886,11 @@ function doBulk(kind,secId){const c=col();if(c.locked){toast('Álbum bloqueado: 
   const secs=secId?c.sections.filter(s=>s.id===secId):c.sections.filter(s=>s.showApp);const label=secId?vLabelSec(c,secs[0]):c.name;
   const after=()=>{save();const y=scrollY;render();scrollTo(0,y)};
   if(kind==='fill'){const ks=planFill(c,secs);if(!ks.length){toast(secId?'Esta sección ya está completa':'Tu álbum ya está completo');return}
-    askConfirm((secId?'Completar ':'Completar álbum ')+label,'Se marcarán '+ks.length+' figuritas como "la tengo".',()=>{ks.forEach(k=>c.counts[k]=1);after();toast(ks.length+' figuritas marcadas')})}
+    askConfirm((secId?'Completar ':'Completar álbum ')+label,'Se marcarán '+ks.length+' figuritas como "la tengo".',()=>{ks.forEach(k=>{const f=findItem(c,k);c.counts[k]=Math.max(c.counts[k]||0,f.sec?setsOf(c,f.sec,vidOfSlot(k)):1)});after();toast(ks.length+' figuritas marcadas')})}
   else if(kind==='clear'){const {ks,rep}=planClear(c,secs,!secId);if(!ks.length){toast('No hay nada marcado aquí');return}
     askConfirm((secId?'Limpiar ':'Limpiar álbum ')+label,'Se desmarcarán '+ks.length+' figuritas'+(rep?' y se borrarán '+rep+' repetidas':'')+'.',()=>{ks.forEach(k=>delete c.counts[k]);after();toast('Listo, desmarcadas '+ks.length)})}
+  else if(kind==='minus1'){if(!secId)return;const ks=visSlots(c,secs[0]).map(z=>z.k).filter(k=>(c.counts[k]||0)>0);if(!ks.length){toast('No hay nada que restar aquí');return}
+    askConfirm('Restar 1 en '+label,'Se restará 1 a '+ks.length+' figuritas (primero sale de las repetidas). Tus sets no cambian.',()=>{ks.forEach(k=>{const n=(c.counts[k]||0)-1;if(n>0)c.counts[k]=n;else delete c.counts[k]});after();toast('Listo, −1 a '+ks.length+' figuritas')})}
   else if(kind==='unrep'){const {out,tot}=planUnrep(c,secs,!secId);if(!tot){toast('No hay repetidas aquí');return}
     askConfirm((secId?'Quitar repetidas de ':'Quitar todas las repetidas de ')+label,'Se borrarán '+tot+' repetidas. Tu álbum no cambia.',()=>{out.forEach(([k,b])=>{if(b)c.counts[k]=b;else delete c.counts[k]});after();toast(tot+' repetidas quitadas')})}}
 /* ---------- Lista de plantillas: agrupada y con buscador ---------- */
@@ -863,17 +911,23 @@ function compress(arr,sec){if(!(sec.kind==='num'||sec.kind==='code'))return arr.
   return out.join('\u0000').split('\u0000')}
 function shareText(c,o){const sh=c.share;const lines=[];const g=goalOf(c);
   lines.push(sh.title.replace('{nombre}',c.name).replace('{editorial}',c.editorial||'').trim());
-  const block=(title,kind)=>{const rows=[];let total=0;const secs=c.sections.filter(s=>s.showShare);
+  const block=(title,kind)=>{const rows=[];let total=0;const rs=kind==='rule'?new Set(ruleSecs(c)):null;const secs=c.sections.filter(s=>s.showShare&&(!rs||rs.has(s.id)));
     secs.forEach((s,idx)=>{const its=items(s);const multi=isMulti(s);const groups=[];const st=new Map(its.map(it=>[it,itemState(c,s,it)]));
-      if(kind==='miss'){
-        const g=secGoal(c,s);if(g==='any'||!multi){const l=its.filter(it=>{const x=st.get(it);return g==='any'?x.missItem:x.missSlots.length>0}).map(it=>({it,e:1}));if(l.length)groups.push([null,l])}
-        else secVars(c,s).forEach(vid=>{const l=its.filter(it=>st.get(it).missSlots.some(m=>m.vid===vid)).map(it=>({it,e:1}));if(l.length)groups.push([vShare(varOf(c,vid)),l])})}
+      if(kind==='rule'){const one=(x,z)=>z.n===(z.N||1)&&z.goal&&!x.extras.length;
+        if(!multi||g==='any'){const l=its.filter(it=>{const x=st.get(it);return g==='any'?x.tot===1&&x.extras.length===0:x.sl.some(z=>one(x,z))}).map(it=>({it,e:1}));if(l.length)groups.push([null,l])}
+        else secVars(c,s).forEach(vid=>{const l=its.filter(it=>{const x=st.get(it);const z=x.sl.find(z=>z.vid===vid);return z&&one(x,z)}).map(it=>({it,e:1}));if(l.length)groups.push([vShare(varOf(c,vid)),l])})}
+      else if(kind==='miss'){
+        const g=secGoal(c,s);const SS=Array.isArray(o.sets)&&o.sets.length?o.sets:null;
+        const need=z=>{if(!z||!z.goal)return 0;const N=z.N||1;if(SS){let k=0;SS.forEach(j=>{if(j<=N&&z.n<j)k++});return k}return Math.max(0,N-z.n)};
+        if(g==='any'){if(!SS||SS.includes(1)){const l=its.filter(it=>st.get(it).missItem).map(it=>({it,e:1}));if(l.length)groups.push([null,l])}}
+        else if(!multi){const l=its.map(it=>({it,e:need(st.get(it).sl[0])})).filter(z=>z.e>0);if(l.length)groups.push([null,l])}
+        else secVars(c,s).forEach(vid=>{const l=its.map(it=>({it,e:need(st.get(it).sl.find(z=>z.vid===vid))})).filter(z=>z.e>0);if(l.length)groups.push([vShare(varOf(c,vid)),l])})}
       else{if(!multi){const l=[];its.forEach(it=>{const e=st.get(it).extras.reduce((a,z)=>a+z.e,0);if(e>0)l.push({it,e})});if(l.length)groups.push([null,l])}
         else secVars(c,s).forEach(vid=>{const l=[];its.forEach(it=>{const z=st.get(it).extras.find(z=>z.vid===vid);if(z)l.push({it,e:z.e})});if(l.length)groups.push([vShare(varOf(c,vid)),l])})}
       if(!groups.length)return;
-      groups.forEach(([vn,l],gi)=>{if(gi&&sh.gapGroups&&sh.nameOwnLine)rows.push('');total+=kind==='miss'?l.length:(sh.repCount?l.reduce((a,z)=>a+z.e,0):l.length);
-        const plain=kind==='miss'||!sh.repCount;
-        const parts=sh.ranges&&plain?compress(l.map(z=>z.it),s):l.map(z=>kind==='rep'&&sh.repCount&&z.e>1?z.it.share+' (x'+z.e+')':z.it.share);
+      groups.forEach(([vn,l],gi)=>{if(gi&&sh.gapGroups&&sh.nameOwnLine)rows.push('');total+=kind==='miss'?l.reduce((a,z)=>a+z.e,0):kind!=='rep'?l.length:(sh.repCount?l.reduce((a,z)=>a+z.e,0):l.length);
+        const showQ=kind==='miss'||(kind==='rep'&&sh.repCount);const plain=!showQ||l.every(z=>z.e<2);
+        const parts=sh.ranges&&plain?compress(l.map(z=>z.it),s):l.map(z=>showQ&&z.e>1?z.it.share+' (x'+z.e+')':z.it.share);
         const nm=(s.shareName||s.name)+(s.emoji?' '+s.emoji:'')+(vn?' · '+vn:'');
         let head=sh.secName?nm+(sh.showVariant&&!multi?' ('+vShare(varOf(c,s.allSpecial?(s.specialVariant||s.variant):s.variant))+')':'')+':':(vn?vn+':':'');if(head&&sh.bold)head='*'+head+'*';
         const body=layoutOf(s)==='lines'?parts.join('\n'):parts.join(sh.sep);
@@ -883,17 +937,24 @@ function shareText(c,o){const sh=c.share;const lines=[];const g=goalOf(c);
     if(rows.length){lines.push('');lines.push(title.replace('{n}',total));if(sh.gapGroups&&sh.nameOwnLine)lines.push('');lines.push(...rows)}};
   if(o.miss)block(sh.missTitle,'miss');
   if(o.rep)block(sh.repTitle,'rep');
+  if(o.rule&&ruleOn())block(sh.ruleTitle||'🎡 Ruleteo ({n}):','rule');
   const ft=String(sh.footer||'').trim();if(ft){const lk=appLink();if(!ft.includes('{enlace}')||lk){lines.push('');lines.push(ft.replace('{enlace}',lk).replace('{nombre}',c.name))}}
   return lines.join('\n')}
-let shOpt={miss:true,rep:true};
+let shOpt={miss:true,rep:false,rule:false};
+const SECRET_KEY='af.ruleteo';let secretTaps=0,secretT=0;
+const ruleOn=()=>{try{return localStorage.getItem(SECRET_KEY)==='1'}catch(e){return false}};
+function toggleSecret(){const on=!ruleOn();try{on?localStorage.setItem(SECRET_KEY,'1'):localStorage.removeItem(SECRET_KEY)}catch(e){}if(!on)shOpt.rule=false;toast(on?'🎡 Ruleteo activado en este celular':'Ruleteo desactivado')}
+function ruleSecs(c){const ids=c.ui&&c.ui.ruleSecs;const all=c.sections.filter(s=>s.showShare).map(s=>s.id);return Array.isArray(ids)?ids.filter(id=>all.includes(id)):all}
 function openShare(){const c=col();const t=shareText(c,shOpt);
   sheet(`<div class="sechd"><h2 style="flex:1">Compartir</h2><button class="btn sm" data-a="close">Cerrar</button></div>
-  <div class="seg" style="margin:10px 0 0"><button aria-pressed="${shOpt.miss}" data-a="sho" data-k="miss">Faltantes</button><button aria-pressed="${shOpt.rep}" data-a="sho" data-k="rep">Repetidas</button></div>
+  <div class="seg" style="margin:10px 0 0"><button aria-pressed="${shOpt.miss}" data-a="sho" data-k="miss">Faltantes</button><button aria-pressed="${shOpt.rep}" data-a="sho" data-k="rep">Repetidas</button>${ruleOn()?`<button aria-pressed="${!!shOpt.rule}" data-a="sho" data-k="rule">🎡 Ruleteo</button>`:''}</div>
+  ${ruleOn()&&shOpt.rule?(()=>{const sel=new Set(ruleSecs(c));const secs=c.sections.filter(s=>s.showShare);return `<div class="rsecs"><span class="lbl">Secciones del ruleteo</span><button class="btn sm" data-a="rsall">${sel.size===secs.length?'Ninguna':'Todas'}</button><div class="vchecks" style="width:100%">${secs.map(s=>`<button class="actv" data-a="rsec" data-s="${s.id}" aria-pressed="${sel.has(s.id)}">${esc(s.name)}</button>`).join('')}</div></div>`})():''}
+  ${ruleOn()&&shOpt.miss&&maxSets(c)>1?(()=>{const M=maxSets(c);const sel=Array.isArray(shOpt.sets)?shOpt.sets:[];return `<div class="rsecs"><span class="lbl">Sets en Faltantes</span><div class="vchecks" style="width:100%"><button class="actv" data-a="shset" data-k="0" aria-pressed="${!sel.length}">Juntos</button>${Array.from({length:M},(_,i)=>`<button class="actv" data-a="shset" data-k="${i+1}" aria-pressed="${sel.includes(i+1)}">Set ${i+1}</button>`).join('')}</div></div>`})():''}
   ${shOpt.rep?`<label class="chk"><input type="checkbox" id="sh-rc" data-a="repcount" ${c.share.repCount?'checked':''}><span>Indicar cuántas repetidas tengo de cada una<small>Ej: 5 (x2)</small></span></label>`:''}<pre id="shtxt" class="wa" data-raw="${esc(t)}">${waHTML(t)}</pre><div class="acts"><button class="btn pri" data-a="copy">Copiar texto</button>${navigator.share?'<button class="btn" data-a="natshare">Enviar…</button>':''}<button class="btn" data-a="edit" data-t="share">Ajustar formato</button></div>
   <p class="muted" style="font-size:12.5px;margin-top:10px">Pega el texto en WhatsApp. Qué secciones salen y los saltos de línea se configuran en cada sección.</p>`)}
 
 /* ---------- Importar / exportar ---------- */
-function exportObj(c,withCounts=true){const {id,locked,group,tpl,activeVar,ui,...rest}=JSON.parse(JSON.stringify(c));if(!withCounts){rest.counts={};delete rest.copy}return {formato:'album-figuritas',version:2,...rest}}
+function exportObj(c,withCounts=true){const {id,locked,group,tpl,activeVar,ui,tplFlags,tplOwner,...rest}=JSON.parse(JSON.stringify(c));(rest.sections||[]).forEach(x=>delete x.fromTpl);(rest.variants||[]).forEach(x=>delete x.fromTpl);if(!withCounts){rest.counts={};delete rest.copy;delete rest.sets}return {formato:'album-figuritas',version:2,...rest}}
 let menuDel=false;
 function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;const s=stats(c);
   const it=(a,ic,t,d,cls='')=>`<button class="${cls}" data-a="${a}" data-id="${c.id}"><span class="mi">${ic}</span><span><b>${t}</b><small>${d}</small></span></button>`;
@@ -908,6 +969,7 @@ function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;
     :!tplCache?`<div class="mrowinfo"><span class="mi">⟳</span><span><b>Actualizar desde plantilla</b><small>Buscando la plantilla…</small></span></div>`
     :tplOf(c)?it('mupd','⟳',tplNewer(c)?'Actualizar plantilla · nueva versión '+tplOf(c).version:'Actualizar desde plantilla',tplNewer(c)?'Tienes la versión '+(c.tpl.version||1)+'. Toma los cambios de la plantilla.':'Tienes la versión '+(c.tpl.version||1)+'. Vuelve a cargarla por si cambió algo.')
     :`<div class="mrowinfo"><span class="mi">⟳</span><span><b>Actualizar desde plantilla</b><small>La plantilla no está disponible ahora. Revisa tu conexión.</small></span></div>`):''}
+  ${c.tpl?(c.tplOwner?it('mowner','🔓','Modo autor: activado','Puedes editar todo para preparar la plantilla. Toca para volver a bloquear.'):it('mowner','🔒','Modo autor de la plantilla','Solo para quien mantiene la plantilla: desbloquea nombres, números y variantes en tu copia.')):''}
   ${it('mtrade','⇄','Intercambiar','Compara con un amigo que tenga la misma configuración')}
   ${it('mgroup','▤','Mover a grupo',(S.groups||[]).find(g=>g.id===c.group)?.name?'Ahora en: '+(S.groups||[]).find(g=>g.id===c.group).name:'Sin agrupación')}
   ${it('medit','◐','Variantes y brillos','Colores, acabados y brillos de esta colección').replace('data-a="medit"','data-a="medit" data-t="vars"')}
@@ -916,13 +978,13 @@ function openColMenu(id){const c=ensure(S.cols.find(x=>x.id===id));if(!c)return;
    :it('mdel','✕','Eliminar colección','Te pedirá confirmar','dng')}
   </div>`)}
 let expWith=false;
-function openExport(id){const c=ensure(S.cols.find(x=>x.id===id));let o=exportObj(c,expTpl?false:expWith);const tplId=c.tpl?.id||slug(c.name);const tplVer=(c.tpl?.version||0)+1;const tplFile=c.tpl?.file||tplId+'.json';
+function openExport(id){const c=ensure(S.cols.find(x=>x.id===id));let o=exportObj(c,expTpl?false:expWith);const tplId=c.tpl?.id||slug(c.name);const tplVer=(c.tpl?.version||0)+1;const tplFile=c.tpl?.file||(slug(c.editorial||'sin-editorial')+'/'+tplId+'.json');
   if(expTpl){o={...o,plantilla:{id:tplId,version:tplVer,descripcion:c.tplDesc||''}};delete o.copy}const txt=JSON.stringify(o,null,2);
   sheet(`<div class="sechd"><h2 style="flex:1;min-width:0">Exportar configuración</h2><button class="btn sm" data-a="close">Cerrar</button></div>
   <p class="muted" style="margin:2px 0 6px;font-size:13px">${esc(c.name)}</p>
   <label class="chk"><input type="checkbox" id="exp-with" data-a="expwith" data-id="${c.id}" ${expWith?'checked':''}><span>Incluir mis figuritas marcadas<small>Apagado: solo la estructura (secciones, variantes, brillos), lista para que otra persona empiece desde 0</small></span></label>
   <label class="chk"><input type="checkbox" id="exp-tpl" data-a="exptpl" data-id="${c.id}" ${expTpl?'checked':''}><span>Exportar como plantilla<small>Para subirla a la carpeta plantillas/ de tu repositorio. Cada exportación sube la versión y quienes la usan ven "Nueva versión".</small></span></label>
-  ${expTpl?`<div class="lockbar" style="display:block;line-height:1.5">Archivo: <b>${esc(tplFile)}</b> · versión <b>${tplVer}</b><br>Súbelo a <b>plantillas/</b> reemplazando el anterior.${c.tpl?'':' Como es nueva, agrega <b>"'+esc(tplFile)+'"</b> a la lista de <b>plantillas/index.json</b>.'}</div>`:''}
+  ${expTpl?`<div class="lockbar" style="display:block;line-height:1.5">Archivo: <b>${esc(tplFile)}</b> · versión <b>${tplVer}</b><br>Súbelo a <b>plantillas/${esc(tplFile.includes('/')?tplFile.split('/').slice(0,-1).join('/')+'/':'')}</b> reemplazando el anterior.${c.tpl?'':' Como es nueva, agrega <b>"'+esc(tplFile)+'"</b> a la lista de <b>plantillas/index.json</b>.'}</div>`:''}
   <pre id="exp" style="font-family:var(--f-mono);font-size:12px">${esc(txt)}</pre>
   <div class="acts"><button class="btn pri" data-a="copyexp">Copiar JSON</button>${window.IS_PWA?`<button class="btn" data-a="dljson" data-id="${c.id}" ${expTpl?`data-file="${esc(tplFile)}"`:''}>Descargar archivo .json</button>`:''}</div>`)}
 function dupCol(c,keep){const n=JSON.parse(JSON.stringify(c));n.id=uid();n.locked=false;const idm={};n.sections.forEach(s=>{const o=s.id;s.id=uid();idm[o]=s.id});
@@ -972,7 +1034,7 @@ function openQty(k){const c=col();const {sec,it}=findItem(c,k);qtyKey=k;qtyBase=
   <div class="qrow"><button class="qb" data-a="qminus" aria-label="Quitar una">−</button><output id="qval" aria-live="polite">${qtyVal}</output><button class="qb" data-a="qplus" aria-label="Agregar una">+</button></div>
   <div class="qacts"><button class="btn" data-a="close">Cancelar</button><button class="btn pri" data-a="qok">Confirmar</button></div></div>`)}
 function updQty(){document.getElementById('qval').textContent=qtyVal;document.getElementById('qsub').textContent=qtySub(qtyVal)}
-function fastTile(k){if(view!=='album'||tab==='miss'||q.trim())return false;const c=col();const ik=itemKeyOf(k);const {sec,it}=findItem(c,ik);if(!sec||!it)return false;
+function fastTile(k){if(view!=='album'||tab==='miss'||q.trim())return false;const c=col();const ik=itemKeyOf(k);const {sec,it}=findItem(c,ik);if(!sec||!it)return false;if(setsOf(c,sec,vidOfSlot(k))>1)return false;
   const secEl=document.getElementById('sec-'+sec.id);if(!secEl)return false;const multi=isMulti(sec);const esc2=x=>x.replace(/["\\]/g,'\\$&');
   if(tab==='album'){const el=multi?secEl.querySelector('[data-mk="'+esc2(ik)+'"]'):secEl.querySelector('.tile[data-k="'+esc2(k)+'"]');if(!el)return false;
     el.outerHTML=multi?mtileHTML(c,sec,it):tileHTML(c,sec,it);let U=0,H=0;items(sec).forEach(x=>{const z=itemState(c,sec,x);U+=z.units;H+=z.have});
@@ -997,6 +1059,11 @@ function refreshSec(secId){if(view!=='album')return;const c=col();const sec=c.se
   const o=secBlock(c,sec,q.trim().toUpperCase());if(o)el.outerHTML=o.html(null);else el.remove();
   const sm=document.querySelector('#main .sum');if(sm)sm.outerHTML=sumHTML(c);
   const nb=document.querySelector('.secnav [data-s="'+secId+'"]');if(nb)nb.classList.toggle('f',!!(c.ui&&c.ui.fold&&c.ui.fold[secId]))}
+function setTap(k,allowDown){const c=col();const {sec}=findItem(c,k);if(!sec)return;const vid=vidOfSlot(k);const N=setsOf(c,sec,vid);const n=c.counts[k]||0;
+  if(N<2){if(n===0)bump(k,1);else if(n===1){if(allowDown)bump(k,-1)}else toast('Tiene '+(n-1)+(n>2?' repetidas':' repetida')+'. Quítalas en la pestaña Repetidas.');return}
+  const sv=setView(c,sec,vid);
+  if(sv){if(n<sv)bump(k,sv-n);else if(n>N)toast('Tiene repetidas. Quítalas en la pestaña Repetidas.');else if(allowDown)bump(k,sv-1-n);return}
+  if(n<N)bump(k,1);else if(n===N)toast('Completa ('+N+'/'+N+'). Mantén presionado para quitar una.');else toast('Tiene '+(n-N)+(n-N>1?' repetidas':' repetida')+'. Quítalas en la pestaña Repetidas.')}
 function bump(k,d){const c=col();const n=Math.max(0,(c.counts[k]||0)+d);if(n)c.counts[k]=n;else delete c.counts[k];save();
   if(!fastTile(k))refreshSec(itemKeyOf(k).split('|')[0])}
 
@@ -1006,10 +1073,10 @@ document.addEventListener('click',e=>{
   const mt=e.target.closest('.tile[data-mk]');
   if(mt&&view==='album'){if(lpFired){lpFired=false;return}const c0=col();if(c0.locked){toast('Álbum bloqueado: toca el candado para marcar');return}
     const ik=mt.dataset.mk;const {sec}=findItem(c0,ik);const act=sec?secAct(c0,sec):null;
-    if(sec&&act&&secVars(c0,sec).includes(act)&&inGoalSec(c0,sec,act)){const sk=ik+'@'+act;const n=c0.counts[sk]||0;if(n===0)bump(sk,1);else if(n===1){if(tab==='album')bump(sk,-1)}else toast('Tiene '+(n-1)+(n>2?' repetidas':' repetida')+'. Quítalas en la pestaña Repetidas.')}else openMulti(ik);return}
+    if(sec&&act&&secVars(c0,sec).includes(act)&&inGoalSec(c0,sec,act)){setTap(ik+'@'+act,tab==='album')}else openMulti(ik);return}
   const t=e.target.closest('.tile[data-k]');
   if(t&&view==='album'){if(lpFired){lpFired=false;return}const c0=col();if(c0.locked){toast('Álbum bloqueado: toca el candado para marcar');return}const k=t.dataset.k;const n=c0.counts[k]||0;
-    if(tab!=='rep'){if(n===0)bump(k,1);else if(n===1){if(tab==='album')bump(k,-1)}else toast('Tiene '+(n-1)+(n>2?' repetidas':' repetida')+'. Quítalas en la pestaña Repetidas.');return}
+    if(tab!=='rep'){setTap(k,tab==='album');return}
     const base=slotBase(c0,k);if(base===null){toast('Te falta esta. Márcala primero en Álbum.');return}if(n-base>=QTY_MIN){openQty(k);return}bump(k,1);return}
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,c=col(),i=+b.dataset.i;
   switch(a){
@@ -1026,9 +1093,13 @@ document.addEventListener('click',e=>{
    case 'qminus':case 'qplus':{qtyVal=Math.max(0,Math.min(999,qtyVal+(a==='qplus'?1:-1)));updQty();break}
    case 'qok':{const c2=col();const tot=qtyVal+qtyBase;if(tot)c2.counts[qtyKey]=tot;else delete c2.counts[qtyKey];save();closeSheet();refreshSec(itemKeyOf(qtyKey).split('|')[0]);break}
    case 'share':openShare();break;
+   case 'ver':{clearTimeout(secretT);secretTaps++;secretT=setTimeout(()=>secretTaps=0,1500);if(secretTaps>=7){secretTaps=0;toggleSecret()}break}
+   case 'rsec':{const c1=col();c1.ui=c1.ui||{};const cur=new Set(ruleSecs(c1));const id=b.dataset.s;cur.has(id)?cur.delete(id):cur.add(id);c1.ui.ruleSecs=[...cur];save();openShare();break}
+   case 'shset':{const k=+b.dataset.k;if(!k)shOpt.sets=null;else{const cur=new Set(Array.isArray(shOpt.sets)?shOpt.sets:[]);cur.has(k)?cur.delete(k):cur.add(k);shOpt.sets=cur.size?[...cur].sort((a,b)=>a-b):null}openShare();break}
+   case 'rsall':{const c1=col();c1.ui=c1.ui||{};const all=c1.sections.filter(s=>s.showShare).map(s=>s.id);c1.ui.ruleSecs=ruleSecs(c1).length===all.length?[]:all;save();openShare();break}
    case 'sho':shOpt[b.dataset.k]=!shOpt[b.dataset.k];openShare();break;
    case 'copy':copy(shRaw(),document.getElementById('shtxt'));break;
-   case 'dljson':{const t=document.getElementById('exp').textContent;if(b.dataset.file){const c1=S.cols.find(x=>x.id===b.dataset.id);if(c1){const o=JSON.parse(t);c1.tpl={id:o.plantilla.id,file:b.dataset.file,version:o.plantilla.version};save()}const a2=document.createElement('a');a2.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a2.download=b.dataset.file;document.body.appendChild(a2);a2.click();setTimeout(()=>{URL.revokeObjectURL(a2.href);a2.remove()},1000);toast('Plantilla descargada: '+b.dataset.file);break}const cc=S.cols.find(x=>x.id===b.dataset.id);const nm=(cc?cc.name:'colecciones').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')||'album';
+   case 'dljson':{const t=document.getElementById('exp').textContent;if(b.dataset.file){const c1=S.cols.find(x=>x.id===b.dataset.id);if(c1){const o=JSON.parse(t);c1.tpl={id:o.plantilla.id,file:b.dataset.file,version:o.plantilla.version};save()}const a2=document.createElement('a');a2.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a2.download=b.dataset.file.split('/').pop();document.body.appendChild(a2);a2.click();setTimeout(()=>{URL.revokeObjectURL(a2.href);a2.remove()},1000);toast('Plantilla descargada: '+b.dataset.file);break}const cc=S.cols.find(x=>x.id===b.dataset.id);const nm=(cc?cc.name:'colecciones').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_')||'album';
      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a.download=`${nm}_${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('Archivo descargado');break}
    case 'natshare':navigator.share({text:shRaw()}).catch(()=>{});break;
    case 'copyexp':if(expTpl&&b.closest('#sheet')){const c1=S.cols.find(x=>x.id===document.getElementById('exp-tpl')?.dataset.id);if(c1){const o=JSON.parse(document.getElementById('exp').textContent);c1.tpl={id:o.plantilla.id,file:c1.tpl?.file||o.plantilla.id+'.json',version:o.plantilla.version};save()}}copy(document.getElementById('exp').textContent,document.getElementById('exp'));break;
@@ -1042,24 +1113,24 @@ document.addEventListener('click',e=>{
    case 'addtx':openTx=uid();c.textures.push({id:openTx,name:'Brillo '+(c.textures.length+1),shape:'bubbles',count:8,size:'m',palette:'rainbow',anim:true});save();{const y=scrollY;render();scrollTo(0,y)}break;
    case 'deltx':if(b.dataset.ok){const t=c.textures.splice(i,1)[0];c.variants.forEach(v=>{if(v.texture===t.id)v.texture=null});armed=null;save();const y=scrollY;render();scrollTo(0,y)}break;
    case 'addvar':openVar=uid();c.variants.push({id:openVar,name:'Variante '+(c.variants.length+1),color:'#2fa36b',effect:'solid'});save();render();scrollTo(0,document.body.scrollHeight);break;
-   case 'delvar':if(!b.dataset.ok)break;{armed=null;const v=c.variants.splice(i,1)[0];c.sections.forEach(s=>{if(s.variant===v.id)s.variant=c.variants[0].id;if(s.specialVariant===v.id)s.specialVariant=null;if(isMulti(s)){s.vars=s.vars.filter(id=>id!==v.id);if(!s.vars.length)s.vars=[c.variants[0].id]}});if(c.goalVars)c.goalVars=c.goalVars.filter(id=>id!==v.id);if(c.goalPairs)c.goalPairs=c.goalPairs.filter(k=>!k.endsWith('@'+v.id));save();render();break}
+   case 'delvar':if(!b.dataset.ok||varLocked(c,c.variants[i]))break;{armed=null;const v=c.variants.splice(i,1)[0];c.sections.forEach(s=>{if(s.variant===v.id)s.variant=c.variants[0].id;if(s.specialVariant===v.id)s.specialVariant=null;if(isMulti(s)){s.vars=s.vars.filter(id=>id!==v.id);if(!s.vars.length)s.vars=[c.variants[0].id]}});if(c.goalVars)c.goalVars=c.goalVars.filter(id=>id!==v.id);if(c.goalPairs)c.goalPairs=c.goalPairs.filter(k=>!k.endsWith('@'+v.id));save();render();break}
    case 'addsec':c.sections.push(newSection({variant:c.variants[0]?.id}));save();render();scrollTo(0,document.body.scrollHeight);break;
    case 'layout':c.sections[i].shareLayout=b.dataset.k;save();render();break;
    case 'repcount':c.share.repCount=b.checked;save();openShare();break;
-   case 'kind':c.sections[i].kind=b.dataset.k;save();render();break;
-   case 'az':c.sections[i].letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').join(',');save();render();break;
+   case 'kind':if(secLocked(c,c.sections[i]))break;c.sections[i].kind=b.dataset.k;save();render();break;
+   case 'az':if(secLocked(c,c.sections[i]))break;c.sections[i].letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').join(',');save();render();break;
    case 'secsplit':openSplit(i);break;
    case 'dosplit':{const base=c.sections[i];const ids=[...document.querySelectorAll('[data-splitv]')].filter(x=>x.checked).map(x=>x.dataset.splitv);if(!ids.length){toast('Marca al menos una variante');break}
-     const bn=base.name.replace(/\s*\([^)]*\)\s*$/,'');const add=ids.map(id=>{const n=JSON.parse(JSON.stringify(base));n.id=uid();n.name=bn+' ('+varOf(c,id).name+')';n.variant=id;n.specialVariant=null;n.vars=null;return n});
+     const bn=base.name.replace(/\s*\([^)]*\)\s*$/,'');const add=ids.map(id=>{const n=JSON.parse(JSON.stringify(base));n.id=uid();n.name=bn+' ('+varOf(c,id).name+')';n.variant=id;n.specialVariant=null;n.vars=null;delete n.fromTpl;return n});
      c.sections.splice(i+1,0,...add);closeSheet();{const y=scrollY;render();scrollTo(0,y)}toast(add.length+(add.length>1?' secciones creadas':' sección creada')+'. Revisa los nombres y toca Guardar.');break}
-   case 'dupsec':{const n=JSON.parse(JSON.stringify(c.sections[i]));n.id=uid();n.name=n.name+' (copia)';c.sections.splice(i+1,0,n);save();render();
+   case 'dupsec':{const n=JSON.parse(JSON.stringify(c.sections[i]));delete n.fromTpl;n.id=uid();n.name=n.name+' (copia)';c.sections.splice(i+1,0,n);save();render();
      const inp=document.getElementById('s'+(i+1)+'-n');if(inp){inp.closest('.card').scrollIntoView({block:'start',behavior:'smooth'});inp.focus({preventScroll:true});inp.select()}toast('Sección duplicada: cámbiale el nombre y la variante');break}
    case 'lock':c.locked=!c.locked;save();{const y=scrollY;render();scrollTo(0,y)}toast(c.locked?'Álbum bloqueado':'Álbum desbloqueado');break;
    case 'up':if(i>0){[c.sections[i-1],c.sections[i]]=[c.sections[i],c.sections[i-1]];save();render()}break;
    case 'down':if(i<c.sections.length-1){[c.sections[i+1],c.sections[i]]=[c.sections[i],c.sections[i+1]];save();render()}break;
    case 'arm':{armed=b.dataset.id;const y=scrollY;render();scrollTo(0,y)}break;
    case 'disarm':{armed=null;const y=scrollY;render();scrollTo(0,y)}break;
-   case 'delsec':if(b.dataset.ok){const ds0=c.sections.splice(i,1)[0];if(c.goalPairs)c.goalPairs=c.goalPairs.filter(k=>k!==ds0.id&&!k.startsWith(ds0.id+'@'));armed=null;save();render()}break;
+   case 'delsec':if(secLocked(c,c.sections[i]))break;if(b.dataset.ok){const ds0=c.sections.splice(i,1)[0];if(c.goalPairs)c.goalPairs=c.goalPairs.filter(k=>k!==ds0.id&&!k.startsWith(ds0.id+'@'));armed=null;save();render()}break;
    case 'delcol':if(b.dataset.ok){S.cols=S.cols.filter(x=>x.id!==c.id);draft=null;draftNew=false;armed=null;save();view='home';cur=null;render();toast('Colección eliminada')}break;
    case 'sort':S.sort=b.dataset.k;if(S.sort!=='manual')reorder=false;save();render();break;
    case 'reorder':reorder=!reorder;render();break;
@@ -1102,10 +1173,11 @@ document.addEventListener('click',e=>{
    case 'pendok':{const fn=pend;hideConfirm();if(fn)fn();break}
    case 'pendno':hideConfirm();break;
    case 'hint':sheet(`<div class="sechd"><h2 style="flex:1">${tab==='rep'?'Repetidas':tab==='miss'?'Faltantes':'Álbum'}</h2><button class="btn sm" data-a="close">Entendido</button></div><p style="margin:8px 0 4px;line-height:1.55">${esc(hintText(col()))}</p>`);break;
+   case 'setv':{const c1=col();c1.ui=c1.ui||{};c1.ui.setv=c1.ui.setv||{};c1.ui.setv[b.dataset.p]=+b.dataset.k;save();refreshSec(b.dataset.s);break}
    case 'repview':repView=b.dataset.k;{const y=scrollY;document.getElementById('main').innerHTML=albumHTML();scrollTo(0,y)}break;
    case 'mqm':case 'mqp':{const k=b.dataset.k;mq.vals[k]=Math.max(0,Math.min(999,(mq.vals[k]||0)+(a==='mqp'?1:-1)));const o=document.getElementById('mq-'+vidOfSlot(k));if(o)o.textContent=mq.vals[k];break}
    case 'mqok':{const c1=col();Object.entries(mq.vals).forEach(([k,n])=>{if(n)c1.counts[k]=n;else delete c1.counts[k]});save();closeSheet();refreshSec(mq.ik.split('|')[0]);break}
-   case 'secmulti':{const sx=c.sections[i];const on=b.dataset.k==='1';
+   case 'secmulti':{const sx=c.sections[i];if(secLocked(c,sx))break;const on=b.dataset.k==='1';
      if(on&&!isMulti(sx)){sx.vars=[sx.variant,sx.specialVariant].filter((id,j,arr)=>id&&arr.indexOf(id)===j&&c.variants.some(v=>v.id===id));if(!sx.vars.length)sx.vars=[c.variants[0].id];migrateSecCounts(c,sx,true);toast('Tus figuritas marcadas pasaron a '+varOf(c,sx.vars[0]).name+'. Marca las demás variantes en que sale.')}
      else if(!on&&isMulti(sx)){if(!sx.vars.includes(sx.variant))sx.variant=sx.vars[0];migrateSecCounts(c,sx,false);sx.vars=null;toast('Se conservaron las figuritas de '+varOf(c,sx.variant).name)}
      {const y=scrollY;render();scrollTo(0,y)}break}
@@ -1115,6 +1187,7 @@ document.addEventListener('click',e=>{
    case 'goal':c.goal=b.dataset.k;{const y=scrollY;render();scrollTo(0,y)}break;
    case 'mlink':linkSel=null;tplQ='';openLink(b.dataset.id);break;
    case 'dolink':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplCache.list[+b.dataset.i];if(!b.dataset.ok){linkSel=+b.dataset.i;openLink(c1.id);break}const nm=c1.name;const lost=updateFromTemplate(c1,t);const c2=S.cols.find(x=>x.id===c1.id);c2.name=nm;save();linkSel=null;closeSheet();render();toast(lost?'Listo. '+lost+' figuritas no tenían lugar en la plantilla.':'Listo, ahora usa la plantilla '+t.name);break}
+   case 'mowner':{const c1=S.cols.find(x=>x.id===b.dataset.id);c1.tplOwner=!c1.tplOwner;save();openColMenu(c1.id);toast(c1.tplOwner?'Modo autor activado en este celular':'Plantilla bloqueada otra vez');break}
    case 'mupd':{const c1=S.cols.find(x=>x.id===b.dataset.id);const t=tplOf(c1);if(!t)break;if(!b.dataset.ok){menuUpd=true;openColMenu(c1.id);break}const lost=updateFromTemplate(c1,t);menuUpd=false;closeSheet();render();toast(lost?'Actualizada. '+lost+' figuritas no tenían lugar en la nueva versión.':'Colección actualizada con la plantilla (versión '+t.version+')');break}
    case 'colmenu':menuUpd=false;menuDel=false;{const c1=S.cols.find(x=>x.id===b.dataset.id);if(c1&&c1.tpl){loadTemplates(true).then(()=>{if(!document.getElementById('sheet').hidden&&document.querySelector('#sheetBody [data-a="mupd"],#sheetBody .mrowinfo'))openColMenu(c1.id)})}}openColMenu(b.dataset.id);break;
    case 'mnew':{const n=dupCol(S.cols.find(x=>x.id===b.dataset.id),false);closeSheet();render();toast('Copia nueva lista: '+n.name);break}
@@ -1128,8 +1201,8 @@ document.addEventListener('click',e=>{
    case 'reset0':c.counts={};updSaveBar();toast('Se pondrá todo en 0 al guardar');break;
   }
 });
-document.addEventListener('input',e=>{if(e.target.id==='tplq'){tplQ=e.target.value;const l=document.getElementById('tpllist');if(l&&tplRow)l.innerHTML=tplListHTML(tplRow);return}const ds=e.target.dataset||{};
-  if(ds.varchk&&view==='edit'){const c=col(),sx=c.sections[+ds.s];const cur=new Set(sx.vars||[]);e.target.checked?cur.add(ds.varchk):cur.delete(ds.varchk);
+document.addEventListener('input',e=>{if(e.target.dataset&&e.target.dataset.setk&&view==='edit'){const c=col();c.sets=c.sets||{};const v=Math.max(1,Math.min(20,parseInt(e.target.value)||1));if(v>1)c.sets[e.target.dataset.setk]=v;else delete c.sets[e.target.dataset.setk];return}if(e.target.id==='tplq'){tplQ=e.target.value;const l=document.getElementById('tpllist');if(l&&tplRow)l.innerHTML=tplListHTML(tplRow);return}const ds=e.target.dataset||{};
+  if(ds.varchk&&view==='edit'){const c=col(),sx=c.sections[+ds.s];if(secLocked(c,sx)&&varLocked(c,c.variants.find(v=>v.id===ds.varchk))){e.target.checked=!e.target.checked;return}const cur=new Set(sx.vars||[]);e.target.checked?cur.add(ds.varchk):cur.delete(ds.varchk);
     if(!cur.size){e.target.checked=true;toast('Deja marcada al menos una variante');return}sx.vars=c.variants.map(v=>v.id).filter(id=>cur.has(id));return}
   if(ds.sgoalv&&view==='edit'){const c=col(),sx=c.sections[+ds.s];const cur=new Set(sx.goalVars||[]);e.target.checked?cur.add(ds.sgoalv):cur.delete(ds.sgoalv);sx.goalVars=c.variants.map(v=>v.id).filter(id=>cur.has(id));return}
   if(ds.gpair&&view==='edit'){const c=col();const cur=new Set(c.goalPairs||[]);e.target.checked?cur.add(ds.gpair):cur.delete(ds.gpair);c.goalPairs=[...cur];const y=scrollY;render();scrollTo(0,y);return}
@@ -1154,7 +1227,7 @@ document.addEventListener('input',()=>{if(view==='edit')updSaveBar()});
 document.addEventListener('click',()=>{if(view==='edit')setTimeout(updSaveBar)});
 document.addEventListener('change',e=>{if(e.target.id==='qrimg'){const f=e.target.files[0];if(f)scanFile(f);return}if(e.target.id==='impf'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{document.getElementById('imp').value=r.result;toast('Archivo cargado. Revisa y pulsa importar.')};r.readAsText(f)}});
 let lp=null,lpFired=false;
-document.addEventListener('pointerdown',e=>{const mt=e.target.closest('.tile[data-mk]');if(mt&&view==='album'&&!col().locked){lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}openMulti(mt.dataset.mk)},480);return}const t=e.target.closest('.tile[data-k]');if(!t||view!=='album'||tab!=='rep'||col().locked)return;lpFired=false;clearTimeout(lp);
+document.addEventListener('pointerdown',e=>{const mt=e.target.closest('.tile[data-mk]');if(mt&&view==='album'&&!col().locked){lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}openMulti(mt.dataset.mk)},480);return}const t=e.target.closest('.tile[data-k]');if(t&&view==='album'&&tab==='album'&&!col().locked){const c0=col();const f=findItem(c0,t.dataset.k);if(f.sec&&setsOf(c0,f.sec,vidOfSlot(t.dataset.k))>1){lpFired=false;clearTimeout(lp);lp=setTimeout(()=>{const k=t.dataset.k;const n=c0.counts[k]||0;const N=setsOf(c0,f.sec,vidOfSlot(k));lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}if(n>0&&n<=N)bump(k,-1);else if(n>N)toast('Tiene repetidas. Quítalas en la pestaña Repetidas.')},480)}return}if(!t||view!=='album'||tab!=='rep'||col().locked)return;lpFired=false;clearTimeout(lp);
   lp=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(15)}catch(_){}const k=t.dataset.k;const c0=col();const base=slotBase(c0,k);const n=c0.counts[k]||0;if(base===null||n-base<=0)return;if(n-base>=QTY_MIN)openQty(k);else bump(k,-1)},480)});
 ['pointerup','pointercancel','scroll'].forEach(ev=>document.addEventListener(ev,()=>clearTimeout(lp),true));
 document.addEventListener('contextmenu',e=>{if(e.target.closest('.tile'))e.preventDefault()});

@@ -53,24 +53,36 @@ Tus figuritas no se pierden al actualizar.
 
 La carpeta `plantillas/` del repositorio guarda álbumes listos para usar. En la app, **Nueva colección → Desde una plantilla** muestra todas las que estén ahí.
 
+Cada editorial tiene su propia carpeta:
+
 ```
 plantillas/
-  index.json          ← lista de plantillas
-  anime-world.json    ← una plantilla
+  index.json                              ← lista de plantillas
+  flash-edition/
+    pokemon-anime-world.json
+    pokemon-savage-corruption.json
+  electric-corporation/
+    pokemon-atrapalos-ya.json
 ```
 
-`index.json` solo lista los archivos:
+`index.json` lista cada archivo con su carpeta:
 
 ```json
-{ "plantillas": ["anime-world.json", "mundial-2026.json"] }
+{ "plantillas": [
+  "electric-corporation/pokemon-atrapalos-ya.json",
+  "flash-edition/pokemon-anime-world.json",
+  "flash-edition/pokemon-savage-corruption.json"
+] }
 ```
+
+**Importante:** la app reconoce cada plantilla por el `"id"` que va dentro del archivo (sección `"plantilla"`), no por el nombre ni la carpeta. Puedes renombrar o mover archivos sin afectar a nadie, siempre que **no cambies ese `id`** y actualices `index.json`.
 
 ### Crear o actualizar una plantilla
 
 1. En la app, arma o ajusta el álbum como quieres que lo reciban los demás.
 2. ⋮ de la colección → **Exportar configuración** → marca **Exportar como plantilla** → **Descargar archivo .json**. El archivo ya sale con el nombre correcto y con la versión subida en 1.
-3. En GitHub, entra a la carpeta `plantillas/` → **Add file → Upload files** → sube el archivo (reemplaza el anterior) → **Commit changes**.
-4. Si es una plantilla **nueva**, abre `plantillas/index.json` → lápiz ✎ → agrega su nombre a la lista → **Commit changes**.
+3. En GitHub, entra a la carpeta de la editorial dentro de `plantillas/` (por ejemplo `plantillas/flash-edition/`) → **Add file → Upload files** → sube el archivo (reemplaza el anterior) → **Commit changes**. Para una editorial nueva, al subir escribe la carpeta en el nombre: `nueva-editorial/archivo.json`.
+4. Si es una plantilla **nueva**, abre `plantillas/index.json` → lápiz ✎ → agrega `carpeta/archivo.json` a la lista → **Commit changes**.
 
 No hace falta tocar `sw.js` para actualizar plantillas.
 

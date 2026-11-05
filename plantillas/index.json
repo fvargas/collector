@@ -1,7 +1,7 @@
 {
   "plantillas": [
-    "anime-world.json",
-    "pokemon-atrapalos-ya.json",
-    "pokemon-savage-corruption.json"
+    "electric-corporation/pokemon-atrapalos-ya.json",
+    "flash-edition/pokemon-anime-world.json",
+    "flash-edition/pokemon-savage-corruption.json"
   ]
 }
