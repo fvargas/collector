@@ -44,7 +44,12 @@ Los datos se guardan en cada navegador por separado, así que la app instalada e
 ## 4. Actualizar la app más adelante
 
 1. En GitHub, abre `index.html` → ícono del lápiz, o súbelo de nuevo con **Add file → Upload files**.
-2. Abre `sw.js` y cambia `figuritas-v1` por `figuritas-v2` (luego v3, etc.). Así los celulares bajan la versión nueva.
+2. Abre `sw.js` y revisa que `VERSION` coincida con la versión de la app (por ejemplo `figuritas-v2.1`). Si cambia, los celulares bajan la versión nueva.
+
+**Cómo se numeran las versiones (X.Y):**
+- **X** sube con cambios grandes, que cambian cómo se usa la app o cómo guarda los datos (ej. 2.4 → 3.0).
+- **Y** sube con ajustes, mejoras pequeñas y correcciones (ej. 2.1 → 2.2).
+La versión se ve al final de **Mis colecciones**.
 3. **Commit changes.** La próxima vez que abras la app con internet se actualiza sola. A veces hay que cerrarla y abrirla dos veces.
 
 Tus figuritas no se pierden al actualizar.
