@@ -314,7 +314,7 @@ const shRaw=()=>{const e=document.getElementById('shtxt');return e?(e.dataset.ra
 const APP_URL='https://album-figuritas.github.io/colecciones/';
 const appLink=()=>APP_URL;
 const vShare=v=>v&&(v.shareName||v.name)||'';
-const APP_VER='2.2';
+const APP_VER='2.3';
 const IC={
  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>',
@@ -448,9 +448,9 @@ const legacyVid=(s,it)=>it.special?(s.specialVariant||s.variant):s.variant;
 function slotsOf(c,s,it){const k=key(s,it);return isMulti(s)?secVars(c,s).map(vid=>({k:k+'@'+vid,vid})):[{k,vid:legacyVid(s,it)}]}
 const itemKeyOf=k=>{const i=k.indexOf('@');return i<0?k:k.slice(0,i)};
 const vidOfSlot=k=>{const i=k.indexOf('@');return i<0?null:k.slice(i+1)};
-const setsOf=(c,s,vid)=>{if(goalOf(c)==='any'||!c.sets)return 1;const n=+c.sets[pairKey(s,vid)]||1;return Math.max(1,Math.min(20,n))};
+const setsOf=(c,s,vid)=>{if(!ruleOn()||goalOf(c)==='any'||!c.sets)return 1;const n=+c.sets[pairKey(s,vid)]||1;return Math.max(1,Math.min(20,n))};
 const setView=(c,s,vid)=>{const N=setsOf(c,s,vid);if(N<2)return 0;const v=+(((c.ui||{}).setv||{})[pairKey(s,vid)]||0);return v>N?0:v};
-const maxSets=c=>{if(goalOf(c)==='any'||!c.sets)return 1;return Math.max(1,...Object.values(c.sets).map(n=>+n||1))};
+const maxSets=c=>{if(!ruleOn()||goalOf(c)==='any'||!c.sets)return 1;return Math.max(1,...Object.values(c.sets).map(n=>+n||1))};
 function setChips(c,s,vid,kind){const N=setsOf(c,s,vid);if(N<2)return '';const cur=setView(c,s,vid);const its=items(s);const pk=pairKey(s,vid);const sfx=isMulti(s)?'@'+vid:'';
   const has=k=>{let h=0;its.forEach(it=>{if((c.counts[key(s,it)+sfx]||0)>=k)h++});return h};
   const btn=(k,l,x)=>`<button class="actv setc" data-a="setv" data-p="${esc(pk)}" data-s="${s.id}" data-k="${k}" aria-pressed="${cur===k}">${l}${x!=null?`<span class="cnt">${x}</span>`:''}</button>`;
@@ -945,8 +945,9 @@ function shareText(c,o){const sh=c.share;const lines=[];const g=goalOf(c);
   return lines.join('\n')}
 let shOpt={miss:true,rep:false,rule:false};
 const SECRET_KEY='af.ruleteo';let secretTaps=0,secretT=0;
-const ruleOn=()=>{try{return localStorage.getItem(SECRET_KEY)==='1'}catch(e){return false}};
-function toggleSecret(){const on=!ruleOn();try{on?localStorage.setItem(SECRET_KEY,'1'):localStorage.removeItem(SECRET_KEY)}catch(e){}if(!on)shOpt.rule=false;toast(on?'⚙️ Modo avanzado activado en este celular':'Modo avanzado desactivado')}
+let ADV=(()=>{try{return localStorage.getItem(SECRET_KEY)==='1'}catch(e){return false}})();
+const ruleOn=()=>ADV;
+function toggleSecret(){const on=!ruleOn();ADV=on;try{on?localStorage.setItem(SECRET_KEY,'1'):localStorage.removeItem(SECRET_KEY)}catch(e){}if(!on){shOpt.rule=false;shOpt.sets=null}{const y=scrollY;render();scrollTo(0,y)}toast(on?'⚙️ Modo avanzado activado en este celular':'Modo avanzado desactivado')}
 function ruleSecs(c){const ids=c.ui&&c.ui.ruleSecs;const all=c.sections.filter(s=>s.showShare).map(s=>s.id);return Array.isArray(ids)?ids.filter(id=>all.includes(id)):all}
 function openShare(){const c=col();const t=shareText(c,shOpt);
   sheet(`<div class="sechd"><h2 style="flex:1">Compartir</h2><button class="btn sm" data-a="close">Cerrar</button></div>
